@@ -93,12 +93,13 @@ const schedule = [
         time: '14:30',
         price: 590,
         status: 'confirmed',
-        type: 'transport'
+        type: 'taxi'
       },
       {
         name: '日落沙灘 (Sunset Beach)',
         time: '16:00-18:00',
         price: 127,
+        type: 'attraction',
         bookingLink: 'https://s.klook.com/c/mXkzBeWkXQ',
         description: '欣賞美麗的日落景色，可以在沙灘散步或游泳',
         location: {
@@ -109,8 +110,8 @@ const schedule = [
       {
         name: '楊東夜市 (Duong Dong Night Market)',
         time: '18:30-20:00',
+        type: 'nightlife',
         description: '當地最大的夜市，可品嚐越南美食、購買紀念品',
-        type: 'dinner',
         location: {
           address: 'Bach Dang Street, Duong Dong',
           coordinates: '10.2168° N, 103.9590° E'
@@ -119,6 +120,7 @@ const schedule = [
       {
         name: '金剛超市 (Kingkong Market)',
         time: '20:00-20:30',
+        type: 'shopping',
         description: '採購日用品和零食',
         location: {
           address: '165 Nguyen Trung Truc Street, Duong Dong',
@@ -128,6 +130,7 @@ const schedule = [
       {
         name: 'Miss Tien Spa按摩',
         time: '21:00-22:30',
+        type: 'spa',
         description: '放鬆享受越式按摩',
         bookingNote: '建議提前預約'
       },
@@ -158,6 +161,7 @@ const schedule = [
       {
         name: '野生動物園 (Vinpearl Safari)',
         time: '09:00-13:00',
+        type: 'attraction',
         description: '亞洲最大的半自然野生動物園',
         location: {
           address: 'Bai Dai, Ganh Dau, Phu Quoc',
@@ -174,11 +178,13 @@ const schedule = [
       {
         name: '飯店休息',
         time: '14:30-16:00',
+        type: 'hotel',
         description: '避開最熱的時段'
       },
       {
         name: '富國大世界 (VinWonders)',
         time: '16:00-22:00',
+        type: 'attraction',
         description: '主題樂園，有水舞秀等表演',
         location: {
           address: 'Bai Dai, Ganh Dau, Phu Quoc',
@@ -223,12 +229,13 @@ const schedule = [
       {
         name: '飯店設施體驗',
         time: '14:30-17:00',
+        type: 'hotel',
         description: '游泳池、沙灘活動等'
       },
       {
         name: '開心夜市 (Vui Fest Bazaar)',
         time: '18:00-21:00',
-        type: 'dinner',
+        type: 'nightlife',
         description: '富國島南部的觀光夜市，又稱海濱夜市',
         location: {
           address: 'An Thoi Town, Phu Quoc',
@@ -257,6 +264,7 @@ const schedule = [
       {
         name: '香島水上樂園',
         time: '09:00-12:00',
+        type: 'attraction',
         description: '享受各種水上設施',
         location: {
           address: 'Hon Thom Island, An Thoi, Phu Quoc',
@@ -272,6 +280,7 @@ const schedule = [
       {
         name: '日落小鎮 (Sunset Town)',
         time: '15:00-21:00',
+        type: 'attraction',
         description: '包含：跨海纜車、太陽世界、Mango餐廳、親吻橋、海洋之吻秀',
         location: {
           address: 'Hon Thom Island, Phu Quoc',
@@ -315,6 +324,7 @@ const schedule = [
       {
         name: '珍珠樂園 (Vinpearl Pearl)',
         time: '14:30-20:00',
+        type: 'attraction',
         location: {
           address: 'Bai Dai Beach, Ganh Dau, Phu Quoc',
           coordinates: '10.3482° N, 103.8489° E'

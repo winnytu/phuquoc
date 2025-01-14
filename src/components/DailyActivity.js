@@ -28,6 +28,13 @@ import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 import LunchDiningIcon from '@mui/icons-material/LunchDining';
 import AttractionDetails from './AttractionDetails';
 import { attractions } from '../data/tripData';
+import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
+import LocalTaxiIcon from '@mui/icons-material/LocalTaxi';
+import LogisticsIcon from '@mui/icons-material/LocalShipping';
+import BeachAccessIcon from '@mui/icons-material/BeachAccess';
+import NightlifeIcon from '@mui/icons-material/Nightlife';
+import SpaIcon from '@mui/icons-material/Spa';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 
 const MealChip = ({ type, label }) => {
   const getIcon = () => {
@@ -97,6 +104,73 @@ const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false }) => (
   </ButtonBase>
 );
 
+const getActivityStyle = (type) => {
+  const styles = {
+    transport: {
+      borderLeft: '4px solid #FFB74D',
+      icon: FlightTakeoffIcon,
+      iconColor: '#F57C00'
+    },
+    taxi: {
+      borderLeft: '4px solid #FFB74D',
+      icon: LocalTaxiIcon,
+      iconColor: '#F57C00'
+    },
+    logistics: {
+      borderLeft: '4px solid #CE93D8',
+      icon: LogisticsIcon,
+      iconColor: '#8E24AA'
+    },
+    hotel: {
+      borderLeft: '4px solid #90CAF9',
+      icon: HotelIcon,
+      iconColor: '#1976D2'
+    },
+    breakfast: {
+      borderLeft: '4px solid #A5D6A7',
+      icon: FreeBreakfastIcon,
+      iconColor: '#388E3C'
+    },
+    lunch: {
+      borderLeft: '4px solid #A5D6A7',
+      icon: LunchDiningIcon,
+      iconColor: '#388E3C'
+    },
+    dinner: {
+      borderLeft: '4px solid #A5D6A7',
+      icon: DinnerDiningIcon,
+      iconColor: '#388E3C'
+    },
+    attraction: {
+      borderLeft: '4px solid #F8BBD0',
+      icon: BeachAccessIcon,
+      iconColor: '#D81B60'
+    },
+    nightlife: {
+      borderLeft: '4px solid #F8BBD0',
+      icon: NightlifeIcon,
+      iconColor: '#D81B60'
+    },
+    spa: {
+      borderLeft: '4px solid #F8BBD0',
+      icon: SpaIcon,
+      iconColor: '#D81B60'
+    },
+    shopping: {
+      borderLeft: '4px solid #F8BBD0',
+      icon: ShoppingBagIcon,
+      iconColor: '#D81B60'
+    },
+    default: {
+      borderLeft: '4px solid #90A4AE',
+      icon: InfoIcon,
+      iconColor: '#546E7A'
+    }
+  };
+
+  return styles[type] || styles.default;
+};
+
 const DailyActivity = ({ day }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -129,6 +203,27 @@ const DailyActivity = ({ day }) => {
     setExpandedActivity(expandedActivity === activityName ? null : activityName);
   };
 
+  const getActivityType = (activity) => {
+    if (activity.type === 'transport' || activity.type === 'taxi' || 
+        activity.type === 'logistics' || activity.type === 'hotel' ||
+        activity.type === 'breakfast' || activity.type === 'lunch' || 
+        activity.type === 'dinner') return activity.type;
+    
+    if (activity.name.includes('夜市') || 
+        activity.name.includes('spa') || 
+        activity.name.includes('按摩') ||
+        activity.name.includes('超市') || 
+        activity.name.includes('購物') ||
+        activity.name.includes('沙灘') || 
+        activity.name.includes('樂園') || 
+        activity.name.includes('Safari') || 
+        activity.name.includes('動物園')) {
+      return 'attraction';
+    }
+    
+    return 'default';
+  };
+
   return (
     <>
       {/* 行程列表 */}
@@ -150,10 +245,16 @@ const DailyActivity = ({ day }) => {
           const nextActivity = day.activities[index + 1];
           const attractionKey = getAttractionKey(activity.name);
           const attraction = attractions?.[attractionKey];
+          const activityType = getActivityType(activity);
+          const activityStyle = getActivityStyle(activityType);
+          const ActivityIcon = activityStyle.icon;
           
           return (
             <React.Fragment key={activity.name}>
-              <ListItem>
+              <ListItem sx={{ 
+                borderLeft: activityStyle.borderLeft,
+                transition: 'all 0.3s ease'
+              }}>
                 <Box sx={{ 
                   width: '100%',
                   display: 'flex',
@@ -179,10 +280,8 @@ const DailyActivity = ({ day }) => {
                           gap: 1
                         }}
                       >
+                        <ActivityIcon sx={{ color: activityStyle.iconColor, fontSize: '1.2rem' }} />
                         {activity.name}
-                        {activity.type === 'breakfast' && <FreeBreakfastIcon sx={{ color: '#6B90BF', fontSize: '1.2rem' }} />}
-                        {activity.type === 'lunch' && <LunchDiningIcon sx={{ color: '#6B90BF', fontSize: '1.2rem' }} />}
-                        {activity.type === 'dinner' && <DinnerDiningIcon sx={{ color: '#6B90BF', fontSize: '1.2rem' }} />}
                       </Typography>
                       <Typography 
                         variant="body2" 
@@ -190,7 +289,8 @@ const DailyActivity = ({ day }) => {
                           color: '#5D6D7E',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 0.5
+                          gap: 0.5,
+                          ml: '1.7rem'  // 對齊活動名稱
                         }}
                       >
                         <AccessTimeIcon sx={{ fontSize: '1rem' }} />
@@ -221,7 +321,7 @@ const DailyActivity = ({ day }) => {
                   {/* Activity Info and Actions */}
                   <Stack 
                     spacing={1}
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', ml: '1.7rem' }}  // 對齊活動名稱
                   >
                     <Box sx={{ 
                       display: 'flex', 
