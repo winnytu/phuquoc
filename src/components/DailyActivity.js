@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Paper,
   Typography,
@@ -21,14 +21,19 @@ import {
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import HotelIcon from '@mui/icons-material/Hotel';
 import MapIcon from '@mui/icons-material/Map';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import DateRangeIcon from '@mui/icons-material/DateRange';
+import AttractionDetails from './AttractionDetails';
+import { attractions } from '../data/tripData';
 
 const DailyActivity = ({ day }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [expandedActivity, setExpandedActivity] = useState(null);
 
   const createGoogleMapsLink = (location) => {
     if (!location) return null;
@@ -43,20 +48,38 @@ const DailyActivity = ({ day }) => {
     return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
   };
 
+  const getAttractionKey = (activityName) => {
+    const nameMap = {
+      '日落沙灘 (Sunset Beach)': 'sunsetBeach',
+      '野生動物園 (Vinpearl Safari)': 'vinpearlSafari',
+      '富國大世界 (VinWonders)': 'vinWonders',
+      '日落小鎮 (Sunset Town)': 'sunsetTown'
+    };
+    return nameMap[activityName];
+  };
+
+  const handleExpandActivity = (activityName) => {
+    setExpandedActivity(expandedActivity === activityName ? null : activityName);
+  };
+
   return (
     <Paper sx={{ 
       p: { xs: 2, sm: 3 }, 
       mb: 3,
       borderRadius: 1,
-      bgcolor: 'background.paper'
+      bgcolor: '#FFFFFF',
+      border: '1px solid',
+      borderColor: 'rgba(107, 144, 191, 0.12)'
     }}>
       <Typography variant="h6" gutterBottom sx={{ 
         display: 'flex', 
         alignItems: 'center',
-        color: 'primary.main',
+        color: '#2C3E50',
+        fontSize: { xs: '1.25rem', sm: '1.5rem' },
+        fontWeight: 600,
         '& .MuiSvgIcon-root': { mr: 1 }
       }}>
-        <DateRangeIcon />
+        <DateRangeIcon sx={{ color: '#6B90BF' }} />
         Day {day.day} - {day.date}
       </Typography>
 
@@ -65,21 +88,24 @@ const DailyActivity = ({ day }) => {
           px: { xs: 1, sm: 2 },
           py: 2,
           '&:hover': {
-            bgcolor: 'grey.50'
+            bgcolor: 'rgba(107, 144, 191, 0.08)'
           }
         }
       }}>
         {day.activities.map((activity, index) => {
           const nextActivity = day.activities[index + 1];
+          const attractionKey = getAttractionKey(activity.name);
           
           return (
-            <React.Fragment key={index}>
-              {index > 0 && <Divider variant="inset" component="li" />}
-              <ListItem sx={{ 
-                flexDirection: 'column', 
-                alignItems: 'flex-start',
-                borderRadius: 2
-              }}>
+            <React.Fragment key={activity.name}>
+              <ListItem 
+                alignItems="flex-start"
+                sx={{
+                  flexDirection: 'column',
+                  cursor: attractionKey ? 'pointer' : 'default'
+                }}
+                onClick={() => attractionKey && handleExpandActivity(activity.name)}
+              >
                 <Box sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -97,31 +123,56 @@ const DailyActivity = ({ day }) => {
                       <AccessTimeIcon />
                     )}
                   </ListItemIcon>
-                  <ListItemText 
-                    primary={
-                      <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                        {activity.name}
-                      </Typography>
-                    }
-                    secondary={activity.time || '時間未定'}
-                    sx={{
-                      m: 0,
-                      '& .MuiListItemText-secondary': {
-                        color: 'text.secondary'
+                  <Box sx={{ flex: 1 }}>
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        fontWeight: 500,
+                        fontSize: { xs: '1rem', sm: '1.1rem' },
+                        color: 'primary.main',
+                        mb: 0.5
+                      }}
+                    >
+                      {activity.time}
+                    </Typography>
+                    <Typography 
+                      variant="body1"
+                      sx={{
+                        fontSize: { xs: '0.95rem', sm: '1rem' },
+                        fontWeight: 500,
+                        color: 'text.primary',
+                        lineHeight: 1.5
+                      }}
+                    >
+                      {activity.name}
+                    </Typography>
+                  </Box>
+                  {attractionKey && (
+                    <IconButton 
+                      edge="end"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExpandActivity(activity.name);
+                      }}
+                    >
+                      {expandedActivity === activity.name ? 
+                        <ExpandLessIcon /> : 
+                        <ExpandMoreIcon />
                       }
-                    }}
-                  />
+                    </IconButton>
+                  )}
                   {activity.status === 'confirmed' && (
                     <Chip 
                       label="已確認" 
-                      color="success" 
                       size="small"
                       sx={{ 
                         height: 24,
                         fontSize: '0.75rem',
                         ml: { xs: 0, sm: 1 },
                         mt: { xs: 1, sm: 0 },
-                        mr: { xs: 'auto', sm: 0 }
+                        mr: { xs: 'auto', sm: 0 },
+                        bgcolor: '#E3F2FD',
+                        color: '#4F698C'
                       }}
                     />
                   )}
@@ -142,7 +193,9 @@ const DailyActivity = ({ day }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                           sx={{
-                            bgcolor: 'primary.light',
+                            bgcolor: 'white',
+                            border: 1,
+                            borderColor: 'primary.main',
                             '&:hover': {
                               bgcolor: 'primary.main',
                               color: 'white'
@@ -180,10 +233,28 @@ const DailyActivity = ({ day }) => {
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
-                    ml: { xs: 4, sm: 6 }
+                    ml: { xs: 4, sm: 6 },
+                    mt: 1,
+                    bgcolor: '#E3F2FD',
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 1,
+                    width: 'fit-content',
+                    border: '1px solid',
+                    borderColor: 'rgba(107, 144, 191, 0.3)'
                   }}>
-                    <AttachMoneyIcon fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
+                    <AttachMoneyIcon 
+                      fontSize="small"
+                      sx={{ color: '#4F698C' }}
+                    />
+                    <Typography 
+                      variant="body2" 
+                      sx={{
+                        color: '#4F698C',
+                        fontWeight: 500,
+                        ml: 0.5
+                      }}
+                    >
                       TWD {activity.price}
                     </Typography>
                   </Box>
@@ -195,7 +266,11 @@ const DailyActivity = ({ day }) => {
                     color="text.secondary" 
                     sx={{ 
                       ml: { xs: 4, sm: 6 },
-                      mt: { xs: 1, sm: 0 }
+                      mt: { xs: 1, sm: 0 },
+                      fontSize: { xs: '0.875rem', sm: '0.95rem' },
+                      lineHeight: 1.6,
+                      color: 'text.secondary',
+                      opacity: 0.85
                     }}
                   >
                     {activity.description}
@@ -224,16 +299,41 @@ const DailyActivity = ({ day }) => {
                 {activity.bookingNote && (
                   <Typography 
                     variant="body2" 
-                    color="warning.main" 
                     sx={{ 
                       ml: { xs: 4, sm: 6 },
-                      mt: { xs: 1, sm: 0 }
+                      mt: { xs: 1, sm: 0 },
+                      bgcolor: '#E3F2FD',
+                      px: 3,
+                      py: 1,
+                      borderRadius: 1,
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: '#4F698C',
+                      border: '1px solid',
+                      borderColor: 'rgba(107, 144, 191, 0.3)'
                     }}
                   >
                     注意：{activity.bookingNote}
                   </Typography>
                 )}
+
+                {attractionKey && expandedActivity === activity.name && (
+                  <Box sx={{ 
+                    width: '100%',
+                    mt: 2,
+                    pt: 2,
+                    borderTop: 1,
+                    borderColor: 'divider'
+                  }}>
+                    <AttractionDetails 
+                      attraction={attractions[attractionKey]} 
+                    />
+                  </Box>
+                )}
               </ListItem>
+              {index < day.activities.length - 1 && (
+                <Divider variant="inset" component="li" />
+              )}
             </React.Fragment>
           );
         })}
@@ -243,10 +343,12 @@ const DailyActivity = ({ day }) => {
         <>
           <Divider sx={{ my: 3 }} />
           <Card sx={{ 
-            bgcolor: 'primary.light',
+            bgcolor: '#E3F2FD',
             borderRadius: 1,
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'rgba(107, 144, 191, 0.12)'
           }}>
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ 
@@ -256,28 +358,31 @@ const DailyActivity = ({ day }) => {
               }}>
                 <HotelIcon sx={{ 
                   mr: 1, 
-                  color: 'primary.main',
+                  color: '#6B90BF',
                   fontSize: 28
                 }} />
                 <Typography 
                   variant="h6" 
-                  color="primary"
-                  sx={{ fontWeight: 500 }}
+                  sx={{ 
+                    color: '#4F698C',
+                    fontWeight: 500 
+                  }}
                 >
                   今晚住宿
                 </Typography>
                 {day.hotel.location && (
                   <IconButton
                     size="small"
-                    color="primary"
+                    color="#6B90BF"
                     href={createGoogleMapsLink(day.hotel.location)}
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{ 
                       ml: 'auto',
-                      bgcolor: 'background.paper',
+                      bgcolor: '#FFFFFF',
+                      color: '#6B90BF',
                       '&:hover': {
-                        bgcolor: 'primary.main',
+                        bgcolor: '#6B90BF',
                         color: 'white'
                       }
                     }}
@@ -290,7 +395,7 @@ const DailyActivity = ({ day }) => {
                 variant="h6" 
                 gutterBottom 
                 sx={{ 
-                  color: 'text.primary',
+                  color: '#2C3E50',
                   fontWeight: 500
                 }}
               >
@@ -303,7 +408,7 @@ const DailyActivity = ({ day }) => {
                 sx={{ 
                   display: 'inline-flex', 
                   alignItems: 'center',
-                  color: 'primary.main',
+                  color: '#6B90BF',
                   textDecoration: 'none',
                   '&:hover': {
                     textDecoration: 'underline'

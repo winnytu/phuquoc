@@ -8,7 +8,12 @@ import {
   Button,
   Chip,
   Card,
-  CardContent
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton
 } from '@mui/material';
 import Timeline from '@mui/lab/Timeline';
 import TimelineItem from '@mui/lab/TimelineItem';
@@ -20,10 +25,12 @@ import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import FlightLandIcon from '@mui/icons-material/FlightLand';
 import PersonIcon from '@mui/icons-material/Person';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import CloseIcon from '@mui/icons-material/Close';
 
 const passengers = [
-  { id: 1, name: '杜爸', eTicket: 'ET123456', seat: '12A' },
-  { id: 2, name: '杜麗', eTicket: 'ET123457', seat: '12B' },
+  { id: 1, name: '杜爸', eTicket: 'ET123456', seat: '12A', ticketPdf: 'https://storage.googleapis.com/your-bucket/tickets/dudu-father.pdf' },
+  { id: 2, name: '杜麗', eTicket: 'ET123457', seat: '12B', ticketPdf: 'https://storage.googleapis.com/your-bucket/tickets/duli.pdf' },
   { id: 3, name: 'superdudu', eTicket: 'ET123458', seat: '12C' },
   { id: 4, name: 'winny', eTicket: 'ET123459', seat: '12D' },
   { id: 5, name: 'mandy', eTicket: 'ET123460', seat: '12E' }
@@ -31,24 +38,35 @@ const passengers = [
 
 const FlightInfo = ({ flightInfo }) => {
   const [selectedPassenger, setSelectedPassenger] = useState(0);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+
+  const handleOpenPdf = () => {
+    const pdfUrl = passengers[selectedPassenger].ticketPdf;
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank');
+    }
+  };
 
   if (!flightInfo) return null;
 
   return (
     <Box>
       <Paper sx={{ 
-        p: 3, 
+        p: { xs: 2, sm: 3 }, 
         mb: 3,
-        borderRadius: 1
+        bgcolor: '#FFFFFF',
+        border: '1px solid',
+        borderColor: 'rgba(107, 144, 191, 0.12)'
       }}>
         <Typography variant="h6" gutterBottom sx={{ 
           display: 'flex', 
           alignItems: 'center',
-          color: 'primary.main',
-          '& .MuiSvgIcon-root': { mr: 1 }
+          color: '#2C3E50',
+          fontWeight: 600,
+          mb: 3
         }}>
-          <PersonIcon />
-          團員機票資訊
+          <FlightTakeoffIcon sx={{ mr: 1, color: '#6B90BF' }} />
+          航班資訊
         </Typography>
         
         <Tabs
@@ -59,11 +77,13 @@ const FlightInfo = ({ flightInfo }) => {
           sx={{
             mb: 3,
             borderBottom: 1,
-            borderColor: 'divider',
+            borderColor: '#EDF2F7',
             '& .MuiTab-root': {
-              textTransform: 'none',
-              minHeight: 48,
-              fontSize: '0.95rem'
+              minWidth: 100,
+              color: '#5D6D7E',
+              '&.Mui-selected': {
+                color: '#6B90BF'
+              }
             }
           }}
         >
@@ -78,7 +98,7 @@ const FlightInfo = ({ flightInfo }) => {
         <Card sx={{ 
           mb: 3,
           borderRadius: 2,
-          bgcolor: 'primary.light'
+          bgcolor: '#E3F2FD'
         }}>
           <CardContent sx={{ p: 2 }}>
             <Box sx={{ 
@@ -86,9 +106,12 @@ const FlightInfo = ({ flightInfo }) => {
               alignItems: 'center',
               gap: 2
             }}>
-              <ConfirmationNumberIcon color="primary" />
-              <Box>
-                <Typography variant="subtitle2" color="primary.main">
+              <ConfirmationNumberIcon sx={{ color: '#6B90BF' }} />
+              <Box sx={{ flex: 1 }}>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ color: '#4F698C' }}
+                >
                   電子機票號碼
                 </Typography>
                 <Typography variant="h6">
@@ -99,10 +122,25 @@ const FlightInfo = ({ flightInfo }) => {
                 label={`座位 ${passengers[selectedPassenger].seat}`}
                 size="small"
                 sx={{ 
-                  ml: 'auto',
-                  bgcolor: 'background.paper'
+                  bgcolor: '#FFFFFF',
+                  color: '#2C3E50'
                 }}
               />
+              {passengers[selectedPassenger].ticketPdf && (
+                <IconButton
+                  onClick={handleOpenPdf}
+                  sx={{
+                    bgcolor: '#FFFFFF',
+                    color: '#6B90BF',
+                    '&:hover': {
+                      bgcolor: '#6B90BF',
+                      color: 'white'
+                    }
+                  }}
+                >
+                  <PictureAsPdfIcon />
+                </IconButton>
+              )}
             </Box>
           </CardContent>
         </Card>
@@ -115,13 +153,17 @@ const FlightInfo = ({ flightInfo }) => {
         }}>
           <TimelineItem>
             <TimelineSeparator>
-              <TimelineDot color="primary">
+              <TimelineDot sx={{ bgcolor: '#6B90BF' }}>
                 <FlightTakeoffIcon />
               </TimelineDot>
-              <TimelineConnector />
+              <TimelineConnector sx={{ bgcolor: '#96B9D9' }} />
             </TimelineSeparator>
             <TimelineContent>
-              <Typography variant="subtitle1" color="primary.main" gutterBottom>
+              <Typography 
+                variant="subtitle1" 
+                sx={{ color: '#4F698C' }}
+                gutterBottom
+              >
                 去程第一段
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
@@ -130,18 +172,21 @@ const FlightInfo = ({ flightInfo }) => {
               <Typography variant="body2" color="text.secondary">
                 {flightInfo.departure.from} → {flightInfo.departure.to}
               </Typography>
-              <Button 
-                variant="outlined" 
-                size="small" 
-                sx={{ 
-                  mt: 1,
-                  textTransform: 'none',
-                  borderRadius: 2
-                }}
-                onClick={() => window.open('您的登機證 URL')}
-              >
-                查看登機證
-              </Button>
+              {passengers[selectedPassenger].ticketPdf && (
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  startIcon={<PictureAsPdfIcon />}
+                  sx={{ 
+                    mt: 1,
+                    textTransform: 'none',
+                    borderRadius: 2
+                  }}
+                  onClick={handleOpenPdf}
+                >
+                  查看電子機票
+                </Button>
+              )}
             </TimelineContent>
           </TimelineItem>
 

@@ -1,45 +1,78 @@
 import React, { useState } from 'react';
 import { 
-  Box, 
-  Grid,
-  Paper,
+  Container,
+  Box,
   Typography,
-  Stack
+  Tabs,
+  Tab,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
-import { dailyItinerary } from '../data/tripData';
 import DailyActivity from './DailyActivity';
-import DayNavigation from './DayNavigation';
-import PhotoGallery from './PhotoGallery';
-import BudgetTracker from './BudgetTracker';
-import { photos } from '../data/tripData';
+import { schedule } from '../data/tripData';
 
 const TripSchedule = () => {
-  const [currentDay, setCurrentDay] = useState(0);
-  const selectedDay = dailyItinerary[currentDay];
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [currentDay, setCurrentDay] = useState(schedule?.[0]?.day || 1);
+
+  const handleDayChange = (event, newValue) => {
+    setCurrentDay(newValue);
+  };
+
+  if (!schedule || schedule.length === 0) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography>載入中...</Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <DayNavigation
-          currentDay={currentDay}
-          onDayChange={setCurrentDay}
-          days={dailyItinerary}
-        />
-      </Grid>
+    <Box>
+      <Tabs
+        value={currentDay}
+        onChange={handleDayChange}
+        variant={isMobile ? "scrollable" : "standard"}
+        scrollButtons="auto"
+        sx={{
+          mb: 3,
+          borderBottom: 1,
+          borderColor: '#EDF2F7',
+          '& .MuiTab-root': {
+            minWidth: { xs: 'auto', sm: 100 },
+            px: { xs: 2, sm: 3 },
+            color: '#5D6D7E',
+            '&.Mui-selected': {
+              color: '#6B90BF'
+            }
+          }
+        }}
+      >
+        {schedule?.map((day) => (
+          <Tab 
+            key={day.day}
+            label={`Day ${day.day}`}
+            value={day.day}
+          />
+        ))}
+      </Tabs>
 
-      <Grid item xs={12} md={8}>
-        <Stack spacing={3}>
-          <DailyActivity day={selectedDay} />
-          <PhotoGallery photos={photos[selectedDay.date] || []} />
-        </Stack>
-      </Grid>
-
-      <Grid item xs={12} md={4}>
-        <Box sx={{ position: 'sticky', top: 24 }}>
-          <BudgetTracker activities={selectedDay.activities} />
-        </Box>
-      </Grid>
-    </Grid>
+      <Box>
+        {schedule?.map((day) => (
+          <Box 
+            key={day.day} 
+            sx={{ 
+              display: currentDay === day.day ? 'block' : 'none'
+            }}
+          >
+            <DailyActivity 
+              day={day}
+            />
+          </Box>
+        ))}
+      </Box>
+    </Box>
   );
 };
 

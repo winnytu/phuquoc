@@ -17,27 +17,37 @@ import {
 import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import HotelIcon from '@mui/icons-material/Hotel';
+import LuggageIcon from '@mui/icons-material/Luggage';
 import TripSchedule from './components/TripSchedule';
 import FlightInfo from './components/FlightInfo';
 import { flightInfo } from './data/tripData';
 import HotelInfo from './components/HotelInfo';
+import PackingList from './components/PackingList';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1A73E8',
-      light: '#E8F0FE',
+      main: '#6B90BF',
+      light: '#96B9D9',
+      dark: '#4F698C',
     },
     secondary: {
-      main: '#34A853',
+      main: '#386873',
+      light: '#96B9D9',
+      dark: '#595516',
     },
     background: {
-      default: '#F8F9FA',
+      default: '#F5F7FA',
       paper: '#FFFFFF',
     },
+    text: {
+      primary: '#2C3E50',
+      secondary: '#5D6D7E',
+    },
     grey: {
-      100: '#F3F4F6',
-    }
+      100: '#E3F2FD',
+      200: '#EDF2F7',
+    },
   },
   typography: {
     fontFamily: [
@@ -54,6 +64,21 @@ const theme = createTheme({
     h6: {
       fontWeight: 500,
       letterSpacing: '-0.25px',
+    },
+    subtitle1: {
+      fontSize: '1.1rem',
+      fontWeight: 500,
+      lineHeight: 1.5,
+    },
+    body1: {
+      fontSize: '1rem',
+      lineHeight: 1.8,
+      color: '#2C3E50',
+    },
+    body2: {
+      fontSize: '0.95rem',
+      lineHeight: 1.6,
+      color: '#5D6D7E',
     }
   },
   shape: {
@@ -63,7 +88,8 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          backgroundImage: 'none',
         }
       }
     },
@@ -71,6 +97,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 16,
+          border: '1px solid',
+          borderColor: 'rgba(107, 144, 191, 0.12)',
         }
       }
     },
@@ -80,6 +108,10 @@ const theme = createTheme({
           textTransform: 'none',
           fontWeight: 500,
           fontSize: '0.95rem',
+          color: '#5D6D7E',
+          '&.Mui-selected': {
+            color: '#6B90BF',
+          }
         }
       }
     },
@@ -88,13 +120,59 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
           borderRadius: 8,
+          fontWeight: 500,
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 2px 8px rgba(107, 144, 191, 0.25)',
+          }
         }
       }
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 6,
+          borderRadius: 8,
+          fontSize: '0.85rem',
+          height: 28,
+        },
+        filled: {
+          backgroundColor: '#96B9D9',
+          color: '#2C3E50',
+          '&:hover': {
+            backgroundColor: '#6B90BF',
+            color: '#FFFFFF',
+          }
+        }
+      }
+    },
+    MuiListItem: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          '&:hover': {
+            backgroundColor: 'rgba(107, 144, 191, 0.08)',
+          }
+        }
+      }
+    },
+    MuiBottomNavigation: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#FFFFFF',
+          borderTop: '1px solid',
+          borderColor: '#EDF2F7',
+        }
+      }
+    },
+    MuiBottomNavigationAction: {
+      styleOverrides: {
+        root: {
+          color: '#5D6D7E',
+          '&.Mui-selected': {
+            color: '#6B90BF',
+          }
         }
       }
     }
@@ -113,7 +191,8 @@ function App() {
   const navigationItems = [
     { label: '每日行程', icon: <CalendarMonthIcon /> },
     { label: '航班資訊', icon: <FlightTakeoffIcon /> },
-    { label: '住宿安排', icon: <HotelIcon /> }
+    { label: '住宿安排', icon: <HotelIcon /> },
+    { label: '行李清單', icon: <LuggageIcon /> }
   ];
 
   return (
@@ -135,7 +214,7 @@ function App() {
               sx={{ 
                 p: 4, 
                 mb: 3, 
-                background: 'linear-gradient(135deg, #1A73E8 0%, #4285F4 100%)',
+                background: 'linear-gradient(135deg, #6B90BF 0%, #96B9D9 100%)',
                 color: 'white',
                 borderRadius: 1
               }}
@@ -152,7 +231,9 @@ function App() {
               <Paper sx={{ 
                 mb: 3, 
                 borderRadius: 1,
-                overflow: 'hidden'
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: 'rgba(107, 144, 191, 0.12)'
               }}>
                 <Tabs
                   value={currentTab}
@@ -162,7 +243,8 @@ function App() {
                     bgcolor: 'background.paper',
                     '& .MuiTabs-indicator': {
                       height: 3,
-                      borderRadius: '3px 3px 0 0'
+                      borderRadius: '3px 3px 0 0',
+                      bgcolor: '#6B90BF'
                     }
                   }}
                 >
@@ -182,6 +264,7 @@ function App() {
               {currentTab === 0 && <TripSchedule />}
               {currentTab === 1 && <FlightInfo flightInfo={flightInfo} />}
               {currentTab === 2 && <HotelInfo />}
+              {currentTab === 3 && <PackingList />}
             </Box>
           </Container>
         </Box>
@@ -208,9 +291,9 @@ function App() {
                 '& .MuiBottomNavigationAction-root': {
                   minWidth: 'auto',
                   py: 1,
-                  color: 'text.secondary',
+                  color: '#5D6D7E',
                   '&.Mui-selected': {
-                    color: 'primary.main'
+                    color: '#6B90BF'
                   }
                 },
                 '& .MuiBottomNavigationAction-label': {

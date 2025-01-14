@@ -1,4 +1,4 @@
-export const flightInfo = {
+const flightInfo = {
   departure: {
     date: '2024-01-24',
     from: '桃園機場',
@@ -25,7 +25,7 @@ export const flightInfo = {
   }
 };
 
-export const hotels = [
+const hotels = [
   {
     id: 1,
     name: 'Sailing Club Signature Resort Phu Quoc',
@@ -67,7 +67,7 @@ export const hotels = [
   }
 ];
 
-export const dailyItinerary = [
+const schedule = [
   {
     date: '2024-01-24',
     day: 1,
@@ -286,28 +286,115 @@ export const dailyItinerary = [
   }
 ];
 
-export const attractions = {
+const attractions = {
   sunsetBeach: {
     name: '日落沙灘',
     description: '以美麗的日落景色聞名',
     bestTime: '16:00-18:00',
-    facilities: ['沙灘椅租借', '淋浴設施', '餐廳']
+    facilities: ['沙灘椅租借', '淋浴設施', '餐廳'],
+    details: {
+      description: `
+        富國島最受歡迎的海灘之一，擁有細軟的白沙和清澈的海水。
+        這裡的日落景色特別迷人，是拍攝日落和享受海灘活動的理想地點。
+        沿著海灘有許多餐廳和酒吧，可以一邊享用美食一邊欣賞日落。
+      `,
+      tips: [
+        '建議下午4點後前往，避開最熱的時段',
+        '日落時間約在17:30-18:00之間',
+        '可以在海灘租借躺椅和遮陽傘',
+        '附近有多家海鮮餐廳'
+      ],
+      images: [
+        {
+          url: 'https://storage.googleapis.com/your-bucket/sunset-beach-1.jpg',
+          caption: '日落沙灘的黃昏景色',
+          source: 'https://example.com/photo-credit'
+        },
+        {
+          url: 'https://storage.googleapis.com/your-bucket/sunset-beach-2.jpg',
+          caption: '海灘活動場景'
+        }
+      ]
+    }
   },
   vinpearlSafari: {
     name: '野生動物園',
     openingHours: '09:00-16:00',
-    closedDays: ['週二', '週三', '週四'],
     recommendedVisitTime: '中午前入場',
     duration: '3-4小時',
-    facilities: ['接駁車', '餐廳', '紀念品商店']
+    facilities: ['接駁車', '餐廳', '紀念品商店'],
+    details: {
+      description: `
+        Vinpearl Safari是東南亞最大的半自然野生動物園之一，
+        佔地380公頃，擁有超過150種動物，約3000隻動物。
+        園區分為開放式野生動物區和步行區，可以近距離觀察各種野生動物。
+      `,
+      highlights: [
+        '獅子區',
+        '老虎區',
+        '長頸鹿區',
+        '猴子島',
+        '鳥類天堂'
+      ],
+      tips: [
+        '建議早上入園，動物較活躍',
+        '全程約需3-4小時',
+        '提供接駁車服務',
+        '請勿餵食動物'
+      ],
+      images: [
+        {
+          url: 'https://storage.googleapis.com/your-bucket/vinpearl-safari-1.jpg',
+          caption: '園區內的長頸鹿'
+        },
+        {
+          url: 'https://storage.googleapis.com/your-bucket/vinpearl-safari-2.jpg',
+          caption: '白老虎展區'
+        }
+      ]
+    }
   },
   vinWonders: {
     name: '富國大世界',
     openingHours: '16:00-24:00',
     recommendedVisitTime: '晚餐時間及21:30水舞秀',
     duration: '1.5-2小時',
-    highlights: ['21:30 水舞秀'],
-    facilities: ['餐廳', '商店', '表演場地']
+    highlights: [
+      '21:30 水舞秀',
+      '主題樂園遊樂設施',
+      '水上樂園',
+      '室內遊樂場'
+    ],
+    facilities: ['餐廳', '商店', '表演場地'],
+    details: {
+      description: `
+        VinWonders是富國島最大的主題樂園，結合了遊樂設施、
+        表演節目和餐飲購物。園區內設有多個主題區域，
+        晚上的水舞秀是最受歡迎的表演節目。
+      `,
+      zones: [
+        '歐洲廣場',
+        '冒險樂園',
+        '水上世界',
+        '童話王國'
+      ],
+      tips: [
+        '建議下午4點後入園',
+        '水舞秀建議提前15-20分鐘占位',
+        '可購買套票含晚餐',
+        '部分設施有身高限制'
+      ],
+      images: [
+        {
+          url: 'https://storage.googleapis.com/your-bucket/vinwonders-1.jpg',
+          caption: '夜晚的水舞秀'
+        },
+        {
+          url: 'https://storage.googleapis.com/your-bucket/vinwonders-2.jpg',
+          caption: '歐洲風格的建築'
+        }
+      ]
+    }
   },
   sunsetTown: {
     name: '日落小鎮',
@@ -322,6 +409,35 @@ export const attractions = {
       length: '7,899公尺',
       duration: '15-20分鐘',
       bestTime: '日落時分'
+    },
+    details: {
+      description: `
+        日落小鎮位於富國島南部，是一個集合觀光、餐飲、購物的綜合區域。
+        最著名的是全世界最長的跨海纜車，可以欣賞到壯麗的海景和日落。
+        小鎮內有多個特色景點，包括浪漫的親吻橋和精彩的表演節目。
+      `,
+      mustSee: [
+        '搭乘全球最長跨海纜車',
+        '在親吻橋拍照',
+        '欣賞海洋之吻秀',
+        '享用Mango Bay餐廳美食'
+      ],
+      tips: [
+        '建議下午3點後前往',
+        '纜車最後一班約21:30',
+        '可購買套票包含表演',
+        '建議預訂餐廳位置'
+      ],
+      images: [
+        {
+          url: 'https://storage.googleapis.com/your-bucket/sunset-town-1.jpg',
+          caption: '跨海纜車景觀'
+        },
+        {
+          url: 'https://storage.googleapis.com/your-bucket/sunset-town-2.jpg',
+          caption: '親吻橋夜景'
+        }
+      ]
     }
   },
   pearlPark: {
@@ -348,15 +464,27 @@ export const attractions = {
   }
 };
 
-export const photos = {
-  '2024-01-24': [
-    {
-      url: '/images/day1/beach.jpg',
-      title: '日落沙灘',
-      featured: true,
-      link: 'https://example.com/original-photo'
-    },
-    // ... 其他照片
-  ],
-  // ... 其他日期的照片
+const passengers = [
+  { 
+    id: 1, 
+    name: '杜爸', 
+    eTicket: 'ET123456', 
+    seat: '12A',
+    ticketPdf: 'https://storage.googleapis.com/your-bucket/tickets/dudu-father.pdf'
+  },
+  { 
+    id: 2, 
+    name: '杜麗', 
+    eTicket: 'ET123457', 
+    seat: '12B',
+    ticketPdf: 'https://storage.googleapis.com/your-bucket/tickets/duli.pdf'
+  },
+  // ... 其他乘客
+]; 
+
+export {
+  schedule,
+  flightInfo,
+  hotels,
+  attractions
 }; 

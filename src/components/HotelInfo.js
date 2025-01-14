@@ -37,7 +37,7 @@ const HotelInfo = () => {
         >
           <Box sx={{ 
             p: 3, 
-            background: 'linear-gradient(135deg, #1A73E8 0%, #4285F4 100%)',
+            background: 'linear-gradient(135deg, #6B90BF 0%, #96B9D9 100%)',
             color: 'white'
           }}>
             <Typography variant="h6" sx={{ 
@@ -50,35 +50,53 @@ const HotelInfo = () => {
             </Typography>
           </Box>
 
-          <CardContent sx={{ p: 3 }}>
-            <Stack spacing={2}>
+          <Card sx={{ 
+            mb: 3,
+            bgcolor: '#FFFFFF',
+            border: '1px solid',
+            borderColor: 'rgba(107, 144, 191, 0.12)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
+                sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: '#2C3E50',
+                  fontWeight: 600
+                }}
+              >
+                <HotelIcon sx={{ mr: 1, color: '#6B90BF' }} />
+                {hotel.name}
+              </Typography>
+
               <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center',
-                gap: 2
+                display: 'flex',
+                gap: 2,
+                mt: 2,
+                flexWrap: 'wrap'
               }}>
-                <CalendarTodayIcon color="primary" />
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    入住日期
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                    {hotel.checkIn}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    退房日期
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                    {hotel.checkOut}
-                  </Typography>
-                </Box>
+                <Chip 
+                  icon={<CalendarTodayIcon />} 
+                  label={`${hotel.checkIn} - ${hotel.checkOut}`}
+                  sx={{
+                    bgcolor: '#E3F2FD',
+                    color: '#2C3E50',
+                    '& .MuiSvgIcon-root': {
+                      color: '#6B90BF'
+                    }
+                  }}
+                />
                 <Chip 
                   label={`${hotel.nights} 晚`}
-                  color="primary"
                   size="small"
-                  sx={{ ml: 'auto' }}
+                  sx={{ 
+                    ml: 'auto',
+                    bgcolor: '#E3F2FD',
+                    color: '#4F698C'
+                  }}
                 />
               </Box>
 
@@ -103,9 +121,10 @@ const HotelInfo = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
-                      bgcolor: 'primary.light',
+                      bgcolor: '#E3F2FD',
+                      color: '#6B90BF',
                       '&:hover': {
-                        bgcolor: 'primary.main',
+                        bgcolor: '#6B90BF',
                         color: 'white'
                       }
                     }}
@@ -124,13 +143,17 @@ const HotelInfo = () => {
                 sx={{
                   mt: 2,
                   textTransform: 'none',
-                  borderRadius: 2
+                  borderRadius: 2,
+                  bgcolor: '#6B90BF',
+                  '&:hover': {
+                    bgcolor: '#4F698C'
+                  }
                 }}
               >
                 查看訂房詳情
               </Button>
-            </Stack>
-          </CardContent>
+            </CardContent>
+          </Card>
         </Paper>
       ))}
     </Stack>
