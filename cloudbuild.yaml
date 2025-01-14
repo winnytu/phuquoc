@@ -21,6 +21,10 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--timeout'
+      - '300s'
 
 images:
   - 'gcr.io/$PROJECT_ID/phu-quoc-trip:$COMMIT_SHA' 
