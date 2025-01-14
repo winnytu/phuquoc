@@ -1,0 +1,1 @@
+export { flightInfo, passengers } from './flightInfo'; 

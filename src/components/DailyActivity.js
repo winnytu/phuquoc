@@ -1,34 +1,101 @@
 import React, { useState } from 'react';
 import {
-  Paper,
   Typography,
   Box,
-  Chip,
-  Link,
   List,
   ListItem,
-  ListItemIcon,
-  ListItemText,
-  Card,
-  CardContent,
   Divider,
   IconButton,
-  Tooltip,
   useTheme,
   useMediaQuery,
-  Stack
+  Stack,
+  Collapse,
+  ButtonBase,
+  Chip
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import HotelIcon from '@mui/icons-material/Hotel';
 import MapIcon from '@mui/icons-material/Map';
 import DirectionsIcon from '@mui/icons-material/Directions';
-import DateRangeIcon from '@mui/icons-material/DateRange';
+import InfoIcon from '@mui/icons-material/Info';
+import LinkIcon from '@mui/icons-material/Link';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import FreeBreakfastIcon from '@mui/icons-material/FreeBreakfast';
+import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
+import LunchDiningIcon from '@mui/icons-material/LunchDining';
 import AttractionDetails from './AttractionDetails';
 import { attractions } from '../data/tripData';
+
+const MealChip = ({ type, label }) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'breakfast':
+        return <FreeBreakfastIcon sx={{ fontSize: '1rem' }} />;
+      case 'lunch':
+        return <LunchDiningIcon sx={{ fontSize: '1rem' }} />;
+      case 'dinner':
+        return <DinnerDiningIcon sx={{ fontSize: '1rem' }} />;
+      default:
+        return <RestaurantIcon sx={{ fontSize: '1rem' }} />;
+    }
+  };
+
+  return (
+    <Chip
+      icon={getIcon()}
+      label={label}
+      size="small"
+      sx={{
+        bgcolor: 'rgba(107, 144, 191, 0.08)',
+        color: '#4F698C',
+        '& .MuiChip-icon': {
+          color: '#6B90BF'
+        }
+      }}
+    />
+  );
+};
+
+const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false }) => (
+  <ButtonBase
+    onClick={onClick}
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: 1,
+      py: 0.75,
+      px: 1.5,
+      borderRadius: 1,
+      bgcolor: 'rgba(107, 144, 191, 0.04)',
+      color: '#4F698C',
+      transition: 'all 0.2s',
+      width: fullWidth ? '100%' : 'auto',
+      minHeight: 36,
+      '&:hover': {
+        bgcolor: 'rgba(107, 144, 191, 0.16)',
+      }
+    }}
+  >
+    <Icon sx={{ fontSize: '1.2rem', flexShrink: 0 }} />
+    <Typography 
+      variant="body2" 
+      sx={{ 
+        fontWeight: 500,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: { xs: 'normal', sm: 'nowrap' },
+        lineHeight: 1.2,
+        flex: 1
+      }}
+    >
+      {label}
+    </Typography>
+  </ButtonBase>
+);
 
 const DailyActivity = ({ day }) => {
   const theme = useTheme();
@@ -63,30 +130,17 @@ const DailyActivity = ({ day }) => {
   };
 
   return (
-    <Paper sx={{ 
-      p: { xs: 2, sm: 3 }, 
-      mb: 3,
-      borderRadius: 1,
-      bgcolor: '#FFFFFF',
-      border: '1px solid',
-      borderColor: 'rgba(107, 144, 191, 0.12)'
-    }}>
-      <Typography variant="h6" gutterBottom sx={{ 
-        display: 'flex', 
-        alignItems: 'center',
-        color: '#2C3E50',
-        fontSize: { xs: '1.25rem', sm: '1.5rem' },
-        fontWeight: 600,
-        '& .MuiSvgIcon-root': { mr: 1 }
-      }}>
-        <DateRangeIcon sx={{ color: '#6B90BF' }} />
-        Day {day.day} - {day.date}
-      </Typography>
-
+    <>
+      {/* 行程列表 */}
       <List sx={{ 
         '& .MuiListItem-root': { 
-          px: { xs: 1, sm: 2 },
+          px: { xs: 1.5, sm: 2 },
           py: 2,
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          borderRadius: 1,
+          mb: 1,
+          bgcolor: 'rgba(107, 144, 191, 0.04)',
           '&:hover': {
             bgcolor: 'rgba(107, 144, 191, 0.08)'
           }
@@ -95,333 +149,192 @@ const DailyActivity = ({ day }) => {
         {day.activities.map((activity, index) => {
           const nextActivity = day.activities[index + 1];
           const attractionKey = getAttractionKey(activity.name);
+          const attraction = attractions?.[attractionKey];
           
           return (
             <React.Fragment key={activity.name}>
-              <ListItem 
-                alignItems="flex-start"
-                sx={{
-                  flexDirection: 'column',
-                  cursor: attractionKey ? 'pointer' : 'default'
-                }}
-                onClick={() => attractionKey && handleExpandActivity(activity.name)}
-              >
+              <ListItem>
                 <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  mb: 1, 
                   width: '100%',
-                  flexWrap: { xs: 'wrap', sm: 'nowrap' }
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1.5
                 }}>
-                  <ListItemIcon sx={{
-                    color: 'primary.main',
-                    minWidth: { xs: 32, sm: 40 }
+                  {/* Time and Activity Name */}
+                  <Box sx={{ 
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    width: '100%'
                   }}>
-                    {activity.type === 'hotel' ? (
-                      <HotelIcon />
-                    ) : (
-                      <AccessTimeIcon />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                          fontWeight: 600,
+                          color: '#2C3E50',
+                          mb: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }}
+                      >
+                        {activity.name}
+                        {activity.type === 'breakfast' && <FreeBreakfastIcon sx={{ color: '#6B90BF', fontSize: '1.2rem' }} />}
+                        {activity.type === 'lunch' && <LunchDiningIcon sx={{ color: '#6B90BF', fontSize: '1.2rem' }} />}
+                        {activity.type === 'dinner' && <DinnerDiningIcon sx={{ color: '#6B90BF', fontSize: '1.2rem' }} />}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#5D6D7E',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5
+                        }}
+                      >
+                        <AccessTimeIcon sx={{ fontSize: '1rem' }} />
+                        {activity.time}
+                      </Typography>
+                    </Box>
+                    {attraction && (
+                      <IconButton
+                        size="small"
+                        onClick={() => handleExpandActivity(activity.name)}
+                        sx={{ 
+                          ml: 1,
+                          color: '#4F698C',
+                          bgcolor: 'rgba(107, 144, 191, 0.04)',
+                          '&:hover': {
+                            bgcolor: 'rgba(107, 144, 191, 0.16)'
+                          }
+                        }}
+                      >
+                        {expandedActivity === activity.name ? 
+                          <ExpandLessIcon /> : 
+                          <ExpandMoreIcon />
+                        }
+                      </IconButton>
                     )}
-                  </ListItemIcon>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        fontWeight: 500,
-                        fontSize: { xs: '1rem', sm: '1.1rem' },
-                        color: 'primary.main',
-                        mb: 0.5
-                      }}
-                    >
-                      {activity.time}
-                    </Typography>
-                    <Typography 
-                      variant="body1"
-                      sx={{
-                        fontSize: { xs: '0.95rem', sm: '1rem' },
-                        fontWeight: 500,
-                        color: 'text.primary',
-                        lineHeight: 1.5
-                      }}
-                    >
-                      {activity.name}
-                    </Typography>
                   </Box>
-                  {attractionKey && (
-                    <IconButton 
-                      edge="end"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleExpandActivity(activity.name);
-                      }}
-                    >
-                      {expandedActivity === activity.name ? 
-                        <ExpandLessIcon /> : 
-                        <ExpandMoreIcon />
-                      }
-                    </IconButton>
-                  )}
-                  {activity.status === 'confirmed' && (
-                    <Chip 
-                      label="已確認" 
-                      size="small"
-                      sx={{ 
-                        height: 24,
-                        fontSize: '0.75rem',
-                        ml: { xs: 0, sm: 1 },
-                        mt: { xs: 1, sm: 0 },
-                        mr: { xs: 'auto', sm: 0 },
-                        bgcolor: '#E3F2FD',
-                        color: '#4F698C'
-                      }}
-                    />
-                  )}
-                  {activity.location && (
+
+                  {/* Activity Info and Actions */}
+                  <Stack 
+                    spacing={1}
+                    sx={{ width: '100%' }}
+                  >
                     <Box sx={{ 
-                      ml: 'auto', 
                       display: 'flex', 
                       gap: 1,
-                      width: { xs: '100%', sm: 'auto' },
-                      mt: { xs: 1, sm: 0 },
-                      justifyContent: { xs: 'flex-end', sm: 'flex-start' }
+                      flexWrap: 'wrap'
                     }}>
-                      <Tooltip title="在 Google Maps 中查看">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          href={createGoogleMapsLink(activity.location)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          sx={{
-                            bgcolor: 'white',
-                            border: 1,
-                            borderColor: 'primary.main',
-                            '&:hover': {
-                              bgcolor: 'primary.main',
-                              color: 'white'
-                            }
-                          }}
-                        >
-                          <MapIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      {nextActivity && nextActivity.location && (
-                        <Tooltip title="查看到下一個地點的路線">
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            href={createDirectionsLink(activity.location, nextActivity.location)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                              bgcolor: 'primary.light',
-                              '&:hover': {
-                                bgcolor: 'primary.main',
-                                color: 'white'
-                              }
-                            }}
-                          >
-                            <DirectionsIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                      {activity.type === 'hotel' && (
+                        <ActionButton
+                          icon={HotelIcon}
+                          label="住宿"
+                        />
+                      )}
+                      
+                      {activity.price && (
+                        <ActionButton
+                          icon={AttachMoneyIcon}
+                          label={`${activity.price} TWD`}
+                        />
+                      )}
+
+                      {activity.location && (
+                        <ActionButton
+                          icon={MapIcon}
+                          label="查看地圖"
+                          onClick={() => window.open(createGoogleMapsLink(activity.location), '_blank')}
+                        />
+                      )}
+
+                      {activity.bookingLink && (
+                        <ActionButton
+                          icon={LinkIcon}
+                          label="預訂連結"
+                          onClick={() => window.open(activity.bookingLink, '_blank')}
+                        />
                       )}
                     </Box>
-                  )}
-                </Box>
 
-                {activity.price && (
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    ml: { xs: 4, sm: 6 },
-                    mt: 1,
-                    bgcolor: '#E3F2FD',
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 1,
-                    width: 'fit-content',
-                    border: '1px solid',
-                    borderColor: 'rgba(107, 144, 191, 0.3)'
-                  }}>
-                    <AttachMoneyIcon 
-                      fontSize="small"
-                      sx={{ color: '#4F698C' }}
-                    />
+                    {nextActivity?.location && activity.location && (
+                      <ActionButton
+                        icon={DirectionsIcon}
+                        label="路線導航"
+                        onClick={() => window.open(createDirectionsLink(activity.location, nextActivity.location), '_blank')}
+                        fullWidth={isMobile}
+                      />
+                    )}
+                  </Stack>
+
+                  {/* Description */}
+                  {activity.description && (
                     <Typography 
                       variant="body2" 
-                      sx={{
-                        color: '#4F698C',
-                        fontWeight: 500,
-                        ml: 0.5
+                      sx={{ 
+                        color: '#5D6D7E',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 0.5,
+                        px: 0.5
                       }}
                     >
-                      TWD {activity.price}
+                      <InfoIcon sx={{ fontSize: '1rem', mt: 0.2 }} />
+                      {activity.description}
                     </Typography>
-                  </Box>
-                )}
-                
-                {activity.description && (
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary" 
-                    sx={{ 
-                      ml: { xs: 4, sm: 6 },
-                      mt: { xs: 1, sm: 0 },
-                      fontSize: { xs: '0.875rem', sm: '0.95rem' },
-                      lineHeight: 1.6,
-                      color: 'text.secondary',
-                      opacity: 0.85
-                    }}
-                  >
-                    {activity.description}
-                  </Typography>
-                )}
-                
-                {activity.bookingLinks && (
-                  <Box sx={{ 
-                    ml: { xs: 4, sm: 6 }, 
-                    mt: 1 
-                  }}>
-                    {Object.entries(activity.bookingLinks).map(([platform, link]) => (
-                      <Link
-                        key={platform}
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{ mr: 2 }}
-                      >
-                        {platform}預訂
-                      </Link>
-                    ))}
-                  </Box>
-                )}
+                  )}
 
-                {activity.bookingNote && (
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      ml: { xs: 4, sm: 6 },
-                      mt: { xs: 1, sm: 0 },
-                      bgcolor: '#E3F2FD',
-                      px: 3,
-                      py: 1,
-                      borderRadius: 1,
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      color: '#4F698C',
-                      border: '1px solid',
-                      borderColor: 'rgba(107, 144, 191, 0.3)'
-                    }}
-                  >
-                    注意：{activity.bookingNote}
-                  </Typography>
-                )}
-
-                {attractionKey && expandedActivity === activity.name && (
-                  <Box sx={{ 
-                    width: '100%',
-                    mt: 2,
-                    pt: 2,
-                    borderTop: 1,
-                    borderColor: 'divider'
-                  }}>
-                    <AttractionDetails 
-                      attraction={attractions[attractionKey]} 
-                    />
-                  </Box>
-                )}
+                  {/* Attraction Details */}
+                  {attraction && (
+                    <Collapse in={expandedActivity === activity.name}>
+                      <Box sx={{ mt: 1 }}>
+                        <AttractionDetails attraction={attraction} />
+                      </Box>
+                    </Collapse>
+                  )}
+                </Box>
               </ListItem>
               {index < day.activities.length - 1 && (
-                <Divider variant="inset" component="li" />
+                <Divider sx={{ my: 1, borderColor: 'rgba(107, 144, 191, 0.12)' }} />
               )}
             </React.Fragment>
           );
         })}
       </List>
 
-      {day.hotel && (
-        <>
-          <Divider sx={{ my: 3 }} />
-          <Card sx={{ 
-            bgcolor: '#E3F2FD',
-            borderRadius: 1,
-            position: 'relative',
-            overflow: 'hidden',
-            border: '1px solid',
-            borderColor: 'rgba(107, 144, 191, 0.12)'
-          }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                mb: 2 
-              }}>
-                <HotelIcon sx={{ 
-                  mr: 1, 
-                  color: '#6B90BF',
-                  fontSize: 28
-                }} />
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    color: '#4F698C',
-                    fontWeight: 500 
-                  }}
-                >
-                  今晚住宿
-                </Typography>
-                {day.hotel.location && (
-                  <IconButton
-                    size="small"
-                    color="#6B90BF"
-                    href={createGoogleMapsLink(day.hotel.location)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{ 
-                      ml: 'auto',
-                      bgcolor: '#FFFFFF',
-                      color: '#6B90BF',
-                      '&:hover': {
-                        bgcolor: '#6B90BF',
-                        color: 'white'
-                      }
-                    }}
-                  >
-                    <MapIcon />
-                  </IconButton>
-                )}
-              </Box>
-              <Typography 
-                variant="h6" 
-                gutterBottom 
-                sx={{ 
-                  color: '#2C3E50',
-                  fontWeight: 500
-                }}
-              >
-                {day.hotel.name}
-              </Typography>
-              <Link
-                href={day.hotel.bookingLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center',
-                  color: '#6B90BF',
-                  textDecoration: 'none',
-                  '&:hover': {
-                    textDecoration: 'underline'
-                  }
-                }}
-              >
-                查看訂房詳情
-              </Link>
-            </CardContent>
-          </Card>
-        </>
+      {/* 用餐概覽 */}
+      {day.meals && (
+        <Box sx={{ 
+          mt: 3,
+          p: 2,
+          borderRadius: 1,
+          bgcolor: 'rgba(107, 144, 191, 0.04)',
+          border: '1px solid',
+          borderColor: 'rgba(107, 144, 191, 0.12)'
+        }}>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 600,
+              color: '#2C3E50',
+              mb: 1.5,
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <RestaurantIcon sx={{ mr: 1, color: '#6B90BF' }} />
+            用餐概覽
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ gap: 1 }}>
+            <MealChip type="breakfast" label={`早餐: ${day.meals.breakfast}`} />
+            <MealChip type="lunch" label={`午餐: ${day.meals.lunch}`} />
+            <MealChip type="dinner" label={`晚餐: ${day.meals.dinner}`} />
+          </Stack>
+        </Box>
       )}
-    </Paper>
+    </>
   );
 };
 

@@ -3,22 +3,62 @@ import {
   Paper,
   Typography,
   Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Button,
-  Chip,
+  ButtonBase,
   Stack,
-  IconButton,
-  Tooltip
+  Divider,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import HotelIcon from '@mui/icons-material/Hotel';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import MapIcon from '@mui/icons-material/Map';
+import LinkIcon from '@mui/icons-material/Link';
+import NightsStayIcon from '@mui/icons-material/NightsStay';
 import { hotels } from '../data/tripData';
 
+const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false }) => (
+  <ButtonBase
+    onClick={onClick}
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      gap: 1,
+      py: 0.75,
+      px: 1.5,
+      borderRadius: 1,
+      bgcolor: 'rgba(107, 144, 191, 0.04)',
+      color: '#4F698C',
+      transition: 'all 0.2s',
+      width: fullWidth ? '100%' : 'auto',
+      minHeight: 36,
+      '&:hover': {
+        bgcolor: 'rgba(107, 144, 191, 0.16)',
+      }
+    }}
+  >
+    <Icon sx={{ fontSize: '1.2rem', flexShrink: 0 }} />
+    <Typography 
+      variant="body2" 
+      sx={{ 
+        fontWeight: 500,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: { xs: 'normal', sm: 'nowrap' },
+        lineHeight: 1.2,
+        flex: 1
+      }}
+    >
+      {label}
+    </Typography>
+  </ButtonBase>
+);
+
 const HotelInfo = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const createGoogleMapsLink = (location) => {
     if (!location) return null;
     const query = encodeURIComponent(location.address);
@@ -26,134 +66,95 @@ const HotelInfo = () => {
   };
 
   return (
-    <Stack spacing={3}>
-      {hotels.map((hotel) => (
+    <Stack spacing={2}>
+      {hotels.map((hotel, index) => (
         <Paper 
           key={hotel.id} 
           sx={{ 
+            p: { xs: 2, sm: 3 },
             borderRadius: 1,
-            overflow: 'hidden'
+            bgcolor: '#FFFFFF',
+            border: '1px solid',
+            borderColor: 'rgba(107, 144, 191, 0.12)'
           }}
         >
+          {/* Hotel Name and Dates */}
           <Box sx={{ 
-            p: 3, 
-            background: 'linear-gradient(135deg, #6B90BF 0%, #96B9D9 100%)',
-            color: 'white'
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+            mb: 2
           }}>
-            <Typography variant="h6" sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              '& .MuiSvgIcon-root': { mr: 1 }
-            }}>
-              <HotelIcon />
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                color: '#2C3E50',
+                fontWeight: 600,
+                fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                lineHeight: 1.3
+              }}
+            >
+              <HotelIcon sx={{ color: '#6B90BF', fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
               {hotel.name}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                color: '#5D6D7E',
+                pl: { xs: 0.5, sm: 0.5 }
+              }}
+            >
+              <CalendarTodayIcon sx={{ fontSize: '1rem' }} />
+              {hotel.checkIn} - {hotel.checkOut}
             </Typography>
           </Box>
 
-          <Card sx={{ 
-            mb: 3,
-            bgcolor: '#FFFFFF',
-            border: '1px solid',
-            borderColor: 'rgba(107, 144, 191, 0.12)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-          }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography 
-                variant="h6" 
-                gutterBottom 
-                sx={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: '#2C3E50',
-                  fontWeight: 600
-                }}
-              >
-                <HotelIcon sx={{ mr: 1, color: '#6B90BF' }} />
-                {hotel.name}
-              </Typography>
+          <Divider sx={{ 
+            my: 2,
+            borderColor: 'rgba(107, 144, 191, 0.12)'
+          }} />
 
-              <Box sx={{ 
-                display: 'flex',
-                gap: 2,
-                mt: 2,
-                flexWrap: 'wrap'
-              }}>
-                <Chip 
-                  icon={<CalendarTodayIcon />} 
-                  label={`${hotel.checkIn} - ${hotel.checkOut}`}
-                  sx={{
-                    bgcolor: '#E3F2FD',
-                    color: '#2C3E50',
-                    '& .MuiSvgIcon-root': {
-                      color: '#6B90BF'
-                    }
-                  }}
-                />
-                <Chip 
-                  label={`${hotel.nights} 晚`}
-                  size="small"
-                  sx={{ 
-                    ml: 'auto',
-                    bgcolor: '#E3F2FD',
-                    color: '#4F698C'
-                  }}
-                />
-              </Box>
+          {/* Hotel Actions */}
+          <Stack 
+            spacing={1}
+            sx={{ width: '100%' }}
+          >
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 1,
+              flexWrap: 'wrap'
+            }}>
+              <ActionButton
+                icon={NightsStayIcon}
+                label={`${hotel.nights} 晚`}
+              />
+              
+              <ActionButton
+                icon={MapIcon}
+                label="查看地圖"
+                onClick={() => window.open(createGoogleMapsLink(hotel.location), '_blank')}
+              />
 
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center',
-                gap: 2
-              }}>
-                <LocationOnIcon color="primary" />
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    飯店地址
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                    {hotel.location.address}
-                  </Typography>
-                </Box>
-                <Tooltip title="在 Google Maps 中查看">
-                  <IconButton
-                    color="primary"
-                    href={createGoogleMapsLink(hotel.location)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      bgcolor: '#E3F2FD',
-                      color: '#6B90BF',
-                      '&:hover': {
-                        bgcolor: '#6B90BF',
-                        color: 'white'
-                      }
-                    }}
-                  >
-                    <MapIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+              <ActionButton
+                icon={LinkIcon}
+                label="訂房詳情"
+                onClick={() => window.open(hotel.bookingLink, '_blank')}
+              />
+            </Box>
 
-              <Button
-                variant="contained"
-                color="primary"
-                href={hotel.bookingLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{
-                  mt: 2,
-                  textTransform: 'none',
-                  borderRadius: 2,
-                  bgcolor: '#6B90BF',
-                  '&:hover': {
-                    bgcolor: '#4F698C'
-                  }
-                }}
-              >
-                查看訂房詳情
-              </Button>
-            </CardContent>
-          </Card>
+            <ActionButton
+              icon={LocationOnIcon}
+              label={hotel.location.address}
+              onClick={() => window.open(createGoogleMapsLink(hotel.location), '_blank')}
+              fullWidth={isMobile}
+            />
+          </Stack>
         </Paper>
       ))}
     </Stack>

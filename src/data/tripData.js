@@ -72,6 +72,11 @@ const schedule = [
     date: '2024-01-24',
     day: 1,
     hotel: hotels[0],
+    meals: {
+      breakfast: '自理',
+      lunch: '機上餐點',
+      dinner: '楊東夜市美食'
+    },
     activities: [
       {
         name: '抵達胡志明市',
@@ -105,6 +110,7 @@ const schedule = [
         name: '楊東夜市 (Duong Dong Night Market)',
         time: '18:30-20:00',
         description: '當地最大的夜市，可品嚐越南美食、購買紀念品',
+        type: 'dinner',
         location: {
           address: 'Bach Dang Street, Duong Dong',
           coordinates: '10.2168° N, 103.9590° E'
@@ -137,7 +143,18 @@ const schedule = [
     date: '2024-01-25',
     day: 2,
     hotel: hotels[0],
+    meals: {
+      breakfast: '飯店自助餐',
+      lunch: 'Vinpearl Safari 餐廳',
+      dinner: 'VinWonders 美食廣場'
+    },
     activities: [
+      {
+        name: '飯店早餐',
+        time: '08:00-09:00',
+        type: 'breakfast',
+        description: '享用豐盛的飯店自助早餐'
+      },
       {
         name: '野生動物園 (Vinpearl Safari)',
         time: '09:00-13:00',
@@ -149,8 +166,10 @@ const schedule = [
         openingHours: '09:00-16:00'
       },
       {
-        name: '午餐休息',
-        time: '13:00-14:30'
+        name: '午餐 - Safari餐廳',
+        time: '13:00-14:30',
+        type: 'lunch',
+        description: '在野生動物園內的餐廳享用午餐'
       },
       {
         name: '飯店休息',
@@ -166,6 +185,12 @@ const schedule = [
           coordinates: '10.3494° N, 103.8501° E'
         },
         openingHours: '16:00-24:00'
+      },
+      {
+        name: '晚餐 - VinWonders美食廣場',
+        time: '18:30-19:30',
+        type: 'dinner',
+        description: '在樂園內享用晚餐'
       }
     ]
   },
@@ -173,7 +198,18 @@ const schedule = [
     date: '2024-01-26',
     day: 3,
     hotel: hotels[1],
+    meals: {
+      breakfast: '飯店自助餐',
+      lunch: '自理',
+      dinner: '開心夜市美食'
+    },
     activities: [
+      {
+        name: '飯店早餐',
+        time: '08:00-09:00',
+        type: 'breakfast',
+        description: '享用豐盛的飯店自助早餐'
+      },
       {
         name: '退房',
         time: '12:00',
@@ -192,6 +228,7 @@ const schedule = [
       {
         name: '開心夜市 (Vui Fest Bazaar)',
         time: '18:00-21:00',
+        type: 'dinner',
         description: '富國島南部的觀光夜市，又稱海濱夜市',
         location: {
           address: 'An Thoi Town, Phu Quoc',
@@ -205,7 +242,18 @@ const schedule = [
     date: '2024-01-27',
     day: 4,
     hotel: hotels[1],
+    meals: {
+      breakfast: '飯店自助餐',
+      lunch: '香島水上樂園餐廳',
+      dinner: 'Mango Bay餐廳'
+    },
     activities: [
+      {
+        name: '飯店早餐',
+        time: '08:00-09:00',
+        type: 'breakfast',
+        description: '享用豐盛的飯店自助早餐'
+      },
       {
         name: '香島水上樂園',
         time: '09:00-12:00',
@@ -217,8 +265,9 @@ const schedule = [
         openingHours: '09:00-17:00'
       },
       {
-        name: '午餐',
-        time: '12:00-13:30'
+        name: '午餐 - 水上樂園餐廳',
+        time: '12:00-13:30',
+        type: 'lunch'
       },
       {
         name: '日落小鎮 (Sunset Town)',
@@ -228,6 +277,12 @@ const schedule = [
           address: 'Hon Thom Island, Phu Quoc',
           coordinates: '10.0289° N, 104.0224° E'
         }
+      },
+      {
+        name: '晚餐 - Mango Bay餐廳',
+        time: '18:30-20:00',
+        type: 'dinner',
+        description: '在日落小鎮享用浪漫晚餐'
       }
     ]
   },
@@ -235,7 +290,18 @@ const schedule = [
     date: '2024-01-28',
     day: 5,
     hotel: hotels[2],
+    meals: {
+      breakfast: '飯店自助餐',
+      lunch: '自理',
+      dinner: '珍珠樂園餐廳'
+    },
     activities: [
+      {
+        name: '飯店早餐',
+        time: '08:00-09:00',
+        type: 'breakfast',
+        description: '享用豐盛的飯店自助早餐'
+      },
       {
         name: '退房',
         time: '12:00',
@@ -254,6 +320,12 @@ const schedule = [
           coordinates: '10.3482° N, 103.8489° E'
         },
         openingHours: '09:00-20:00'
+      },
+      {
+        name: '晚餐 - 珍珠樂園餐廳',
+        time: '18:30-19:30',
+        type: 'dinner',
+        description: '在樂園內享用晚餐'
       }
     ]
   },
@@ -261,7 +333,18 @@ const schedule = [
     date: '2024-01-29',
     day: 6,
     hotel: null,
+    meals: {
+      breakfast: '飯店自助餐',
+      lunch: '機場餐廳',
+      dinner: '機上餐點'
+    },
     activities: [
+      {
+        name: '飯店早餐',
+        time: '08:00-09:00',
+        type: 'breakfast',
+        description: '享用豐盛的飯店自助早餐'
+      },
       {
         name: '退房',
         time: '10:00',
@@ -271,6 +354,12 @@ const schedule = [
         name: '前往機場',
         time: '10:30',
         type: 'transport'
+      },
+      {
+        name: '午餐 - 機場餐廳',
+        time: '11:00-11:45',
+        type: 'lunch',
+        description: '在機場享用午餐'
       },
       {
         name: '富國島 → 胡志明市',
