@@ -18,11 +18,13 @@ import FlightTakeoffIcon from '@mui/icons-material/FlightTakeoff';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import HotelIcon from '@mui/icons-material/Hotel';
 import LuggageIcon from '@mui/icons-material/Luggage';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import TripSchedule from './components/TripSchedule';
 import FlightInfo from './components/FlightInfo';
 import { flightInfo } from './data/tripData';
 import HotelInfo from './components/HotelInfo';
 import PackingList from './components/PackingList';
+import ExpenseStats from './components/ExpenseStats';
 
 const theme = createTheme({
   palette: {
@@ -192,123 +194,183 @@ function App() {
     { label: '每日行程', icon: <CalendarMonthIcon /> },
     { label: '航班資訊', icon: <FlightTakeoffIcon /> },
     { label: '住宿安排', icon: <HotelIcon /> },
-    { label: '行李清單', icon: <LuggageIcon /> }
+    { label: '行李清單', icon: <LuggageIcon /> },
+    { label: '消費統計', icon: <AttachMoneyIcon /> }
   ];
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div className="app-container">
-        <Box className="main-content">
-          <Container 
-            maxWidth="lg" 
+      <Box sx={{ 
+        pb: { xs: 7, sm: 0 },
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        <Container 
+          maxWidth="lg" 
+          sx={{ 
+            py: { 
+              xs: 2,
+              sm: 3
+            }
+          }}
+        >
+          <Paper 
+            elevation={0}
             sx={{ 
-              py: { 
-                xs: 2,
-                sm: 3
-              }
+              p: 4, 
+              mb: 3, 
+              background: 'linear-gradient(135deg, #6B90BF 0%, #96B9D9 100%)',
+              color: 'white',
+              borderRadius: 1
             }}
           >
-            <Paper 
-              elevation={0}
-              sx={{ 
-                p: 4, 
-                mb: 3, 
-                background: 'linear-gradient(135deg, #6B90BF 0%, #96B9D9 100%)',
-                color: 'white',
-                borderRadius: 1
-              }}
-            >
-              <Typography variant="h4" component="h1" gutterBottom>
-                2024 富國島之旅
-              </Typography>
-              <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                1月24日 - 1月29日・6天5夜
-              </Typography>
+            <Typography variant="h4" component="h1" gutterBottom>
+              2024 富國島之旅
+            </Typography>
+            <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+              1月24日 - 1月29日・6天5夜
+            </Typography>
+          </Paper>
+
+          {!isMobile && (
+            <Paper sx={{ 
+              mb: 3, 
+              borderRadius: 1,
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'rgba(107, 144, 191, 0.12)'
+            }}>
+              <Tabs
+                value={currentTab}
+                onChange={handleTabChange}
+                variant="standard"
+                sx={{ 
+                  bgcolor: 'background.paper',
+                  '& .MuiTabs-indicator': {
+                    height: 3,
+                    borderRadius: '3px 3px 0 0',
+                    bgcolor: '#6B90BF'
+                  }
+                }}
+              >
+                {navigationItems.map((item, index) => (
+                  <Tab 
+                    key={index}
+                    icon={item.icon} 
+                    label={item.label} 
+                    iconPosition="start"
+                  />
+                ))}
+              </Tabs>
             </Paper>
+          )}
 
-            {!isMobile && (
-              <Paper sx={{ 
-                mb: 3, 
-                borderRadius: 1,
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: 'rgba(107, 144, 191, 0.12)'
-              }}>
-                <Tabs
-                  value={currentTab}
-                  onChange={handleTabChange}
-                  variant="standard"
-                  sx={{ 
-                    bgcolor: 'background.paper',
-                    '& .MuiTabs-indicator': {
-                      height: 3,
-                      borderRadius: '3px 3px 0 0',
-                      bgcolor: '#6B90BF'
-                    }
-                  }}
-                >
-                  {navigationItems.map((item, index) => (
-                    <Tab 
-                      key={index}
-                      icon={item.icon} 
-                      label={item.label} 
-                      iconPosition="start"
-                    />
-                  ))}
-                </Tabs>
-              </Paper>
-            )}
+          <Box>
+            {currentTab === 0 && <TripSchedule />}
+            {currentTab === 1 && <FlightInfo flightInfo={flightInfo} />}
+            {currentTab === 2 && <HotelInfo />}
+            {currentTab === 3 && <PackingList />}
+            {currentTab === 4 && <ExpenseStats />}
+          </Box>
+        </Container>
 
-            <Box>
-              {currentTab === 0 && <TripSchedule />}
-              {currentTab === 1 && <FlightInfo flightInfo={flightInfo} />}
-              {currentTab === 2 && <HotelInfo />}
-              {currentTab === 3 && <PackingList />}
-            </Box>
-          </Container>
-        </Box>
-
-        {isMobile && (
+        {isMobile ? (
           <Paper 
             sx={{ 
               position: 'fixed', 
               bottom: 0, 
               left: 0, 
               right: 0,
-              zIndex: 1100,
-              borderRadius: 0,
-              boxShadow: '0 -1px 8px rgba(0,0,0,0.1)'
+              borderTop: '1px solid',
+              borderColor: 'rgba(107, 144, 191, 0.12)',
+              zIndex: 1000
             }} 
             elevation={3}
           >
             <BottomNavigation
               value={currentTab}
               onChange={handleTabChange}
-              showLabels
               sx={{
-                height: 56,
+                bgcolor: '#FFFFFF',
+                height: 64,
+                display: 'flex',
+                justifyContent: 'space-around',
                 '& .MuiBottomNavigationAction-root': {
                   minWidth: 'auto',
-                  py: 1,
-                  color: '#5D6D7E',
+                  padding: '8px 0',
+                  color: '#6B90BF',
                   '&.Mui-selected': {
-                    color: '#6B90BF'
+                    color: '#1976D2'
                   }
                 },
                 '& .MuiBottomNavigationAction-label': {
-                  fontSize: '0.75rem'
+                  display: 'none',
+                  '&.Mui-selected': {
+                    display: 'block',
+                    fontSize: '0.75rem'
+                  }
+                },
+                '& .MuiSvgIcon-root': {
+                  fontSize: '1.5rem',
+                  marginTop: 0,
+                  transition: 'margin-top 0.2s'
+                },
+                '& .Mui-selected .MuiSvgIcon-root': {
+                  marginTop: '-4px'
                 }
               }}
             >
               {navigationItems.map((item, index) => (
-                <BottomNavigationAction
+                <BottomNavigationAction 
                   key={index}
-                  label={item.label}
+                  label={item.label} 
                   icon={item.icon}
+                  sx={{
+                    minWidth: 0,
+                    flex: 1,
+                    '& .MuiBottomNavigationAction-wrapper': {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }
+                  }}
                 />
               ))}
             </BottomNavigation>
+          </Paper>
+        ) : (
+          <Paper sx={{ 
+            mb: 3, 
+            borderRadius: 1,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'rgba(107, 144, 191, 0.12)'
+          }}>
+            <Tabs
+              value={currentTab}
+              onChange={handleTabChange}
+              variant="standard"
+              sx={{ 
+                bgcolor: 'background.paper',
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                  bgcolor: '#6B90BF'
+                }
+              }}
+            >
+              {navigationItems.map((item, index) => (
+                <Tab 
+                  key={index}
+                  icon={item.icon} 
+                  label={item.label} 
+                  iconPosition="start"
+                />
+              ))}
+            </Tabs>
           </Paper>
         )}
 
@@ -330,7 +392,7 @@ function App() {
             </Typography>
           </Container>
         </Box>
-      </div>
+      </Box>
     </ThemeProvider>
   );
 }

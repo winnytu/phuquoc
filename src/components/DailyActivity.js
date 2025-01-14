@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -11,7 +11,8 @@ import {
   Stack,
   Collapse,
   ButtonBase,
-  Chip
+  Chip,
+  Fab
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -35,6 +36,10 @@ import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import NightlifeIcon from '@mui/icons-material/Nightlife';
 import SpaIcon from '@mui/icons-material/Spa';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import AddIcon from '@mui/icons-material/Add';
+import ExpenseForm from './ExpenseForm';
+import { db } from '../firebase';
+import { ref, push, onValue } from 'firebase/database';
 
 const MealChip = ({ type, label }) => {
   const getIcon = () => {
@@ -66,43 +71,94 @@ const MealChip = ({ type, label }) => {
   );
 };
 
-const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false }) => (
-  <ButtonBase
-    onClick={onClick}
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      gap: 1,
-      py: 0.75,
-      px: 1.5,
-      borderRadius: 1,
-      bgcolor: 'rgba(107, 144, 191, 0.04)',
-      color: '#4F698C',
-      transition: 'all 0.2s',
-      width: fullWidth ? '100%' : 'auto',
-      minHeight: 36,
-      '&:hover': {
-        bgcolor: 'rgba(107, 144, 191, 0.16)',
-      }
-    }}
-  >
-    <Icon sx={{ fontSize: '1.2rem', flexShrink: 0 }} />
-    <Typography 
-      variant="body2" 
-      sx={{ 
-        fontWeight: 500,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: { xs: 'normal', sm: 'nowrap' },
-        lineHeight: 1.2,
-        flex: 1
+const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false, variant = 'default' }) => {
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'price':
+        return {
+          bgcolor: 'rgba(139, 195, 74, 0.08)',
+          color: '#689F38',
+          '&:hover': {
+            bgcolor: 'rgba(139, 195, 74, 0.16)',
+          }
+        };
+      case 'map':
+        return {
+          bgcolor: 'rgba(66, 165, 245, 0.08)',
+          color: '#1976D2',
+          '&:hover': {
+            bgcolor: 'rgba(66, 165, 245, 0.16)',
+          }
+        };
+      case 'booking':
+        return {
+          bgcolor: 'rgba(171, 71, 188, 0.08)',
+          color: '#7B1FA2',
+          '&:hover': {
+            bgcolor: 'rgba(171, 71, 188, 0.16)',
+          }
+        };
+      case 'expense':
+        return {
+          bgcolor: 'rgba(255, 152, 0, 0.08)',
+          color: '#F57C00',
+          '&:hover': {
+            bgcolor: 'rgba(255, 152, 0, 0.16)',
+          }
+        };
+      case 'hotel':
+        return {
+          bgcolor: 'rgba(66, 165, 245, 0.08)',
+          color: '#1976D2',
+          '&:hover': {
+            bgcolor: 'rgba(66, 165, 245, 0.16)',
+          }
+        };
+      default:
+        return {
+          bgcolor: 'rgba(107, 144, 191, 0.04)',
+          color: '#4F698C',
+          '&:hover': {
+            bgcolor: 'rgba(107, 144, 191, 0.16)',
+          }
+        };
+    }
+  };
+
+  return (
+    <ButtonBase
+      onClick={onClick}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 1,
+        py: 0.75,
+        px: 1.5,
+        borderRadius: 1,
+        transition: 'all 0.2s',
+        width: fullWidth ? '100%' : 'auto',
+        minHeight: 36,
+        ...getVariantStyles()
       }}
     >
-      {label}
-    </Typography>
-  </ButtonBase>
-);
+      <Icon sx={{ fontSize: '1.2rem', flexShrink: 0 }} />
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          fontWeight: 500,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: { xs: 'normal', sm: 'nowrap' },
+          lineHeight: 1.2,
+          flex: 1
+        }}
+      >
+        {label}
+      </Typography>
+    </ButtonBase>
+  );
+};
 
 const getActivityStyle = (type) => {
   const styles = {
@@ -175,6 +231,25 @@ const DailyActivity = ({ day }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [expandedActivity, setExpandedActivity] = useState(null);
+  const [expenseFormOpen, setExpenseFormOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [expenses, setExpenses] = useState([]);
+
+  // 從 Firebase 讀取支出資料
+  useEffect(() => {
+    const expensesRef = ref(db, 'expenses');
+    const unsubscribe = onValue(expensesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const expensesList = Object.values(data).filter(
+          expense => expense.dayNumber === day.day
+        );
+        setExpenses(expensesList);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [day.day]);
 
   const createGoogleMapsLink = (location) => {
     if (!location) return null;
@@ -224,10 +299,27 @@ const DailyActivity = ({ day }) => {
     return 'default';
   };
 
+  const handleAddExpense = (newExpense) => {
+    const expensesRef = ref(db, 'expenses');
+    push(expensesRef, {
+      ...newExpense,
+      activityName: selectedActivity?.name || '',
+      timestamp: Date.now()
+    });
+    setExpenseFormOpen(false);
+    setSelectedActivity(null);
+  };
+
+  const handleOpenExpenseForm = (activity) => {
+    setSelectedActivity(activity);
+    setExpenseFormOpen(true);
+  };
+
   return (
     <>
       {/* 行程列表 */}
       <List sx={{ 
+        position: 'relative',
         '& .MuiListItem-root': { 
           px: { xs: 1.5, sm: 2 },
           py: 2,
@@ -268,7 +360,11 @@ const DailyActivity = ({ day }) => {
                     justifyContent: 'space-between',
                     width: '100%'
                   }}>
-                    <Box sx={{ flex: 1 }}>
+                    <Box sx={{ 
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}>
                       <Typography 
                         variant="subtitle1" 
                         sx={{ 
@@ -285,12 +381,12 @@ const DailyActivity = ({ day }) => {
                       </Typography>
                       <Typography 
                         variant="body2" 
-                        sx={{ 
+                        sx={{
                           color: '#5D6D7E',
                           display: 'flex',
                           alignItems: 'center',
                           gap: 0.5,
-                          ml: '1.7rem'  // 對齊活動名稱
+                          ml: '1.7rem'
                         }}
                       >
                         <AccessTimeIcon sx={{ fontSize: '1rem' }} />
@@ -298,16 +394,16 @@ const DailyActivity = ({ day }) => {
                       </Typography>
                     </Box>
                     {attraction && (
-                      <IconButton
+                      <IconButton 
                         size="small"
                         onClick={() => handleExpandActivity(activity.name)}
                         sx={{ 
-                          ml: 1,
                           color: '#4F698C',
                           bgcolor: 'rgba(107, 144, 191, 0.04)',
                           '&:hover': {
                             bgcolor: 'rgba(107, 144, 191, 0.16)'
-                          }
+                          },
+                          mt: 0.5
                         }}
                       >
                         {expandedActivity === activity.name ? 
@@ -321,7 +417,7 @@ const DailyActivity = ({ day }) => {
                   {/* Activity Info and Actions */}
                   <Stack 
                     spacing={1}
-                    sx={{ width: '100%', ml: '1.7rem' }}  // 對齊活動名稱
+                    sx={{ width: '100%', ml: '1.7rem' }}
                   >
                     <Box sx={{ 
                       display: 'flex', 
@@ -332,21 +428,16 @@ const DailyActivity = ({ day }) => {
                         <ActionButton
                           icon={HotelIcon}
                           label="住宿"
+                          variant="hotel"
                         />
                       )}
                       
-                      {activity.price && (
-                        <ActionButton
-                          icon={AttachMoneyIcon}
-                          label={`${activity.price} TWD`}
-                        />
-                      )}
-
                       {activity.location && (
                         <ActionButton
                           icon={MapIcon}
                           label="查看地圖"
                           onClick={() => window.open(createGoogleMapsLink(activity.location), '_blank')}
+                          variant="map"
                         />
                       )}
 
@@ -355,25 +446,24 @@ const DailyActivity = ({ day }) => {
                           icon={LinkIcon}
                           label="預訂連結"
                           onClick={() => window.open(activity.bookingLink, '_blank')}
+                          variant="booking"
                         />
                       )}
-                    </Box>
 
-                    {nextActivity?.location && activity.location && (
                       <ActionButton
-                        icon={DirectionsIcon}
-                        label="路線導航"
-                        onClick={() => window.open(createDirectionsLink(activity.location, nextActivity.location), '_blank')}
-                        fullWidth={isMobile}
+                        icon={AttachMoneyIcon}
+                        label="新增支出"
+                        onClick={() => handleOpenExpenseForm(activity)}
+                        variant="expense"
                       />
-                    )}
+                    </Box>
                   </Stack>
 
                   {/* Description */}
                   {activity.description && (
                     <Typography 
                       variant="body2" 
-                      sx={{ 
+                      sx={{
                         color: '#5D6D7E',
                         display: 'flex',
                         alignItems: 'flex-start',
@@ -434,6 +524,18 @@ const DailyActivity = ({ day }) => {
           </Stack>
         </Box>
       )}
+
+      {/* Expense Form Dialog */}
+      <ExpenseForm
+        open={expenseFormOpen}
+        onClose={() => {
+          setExpenseFormOpen(false);
+          setSelectedActivity(null);
+        }}
+        onSubmit={handleAddExpense}
+        day={day}
+        activity={selectedActivity}
+      />
     </>
   );
 };
