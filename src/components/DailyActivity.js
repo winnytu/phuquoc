@@ -435,7 +435,7 @@ const DailyActivity = ({ day }) => {
                       {activity.location && (
                         <ActionButton
                           icon={MapIcon}
-                          label="查看地圖"
+                          label="地圖"
                           onClick={() => window.open(createGoogleMapsLink(activity.location), '_blank')}
                           variant="map"
                         />
@@ -444,7 +444,7 @@ const DailyActivity = ({ day }) => {
                       {activity.bookingLink && (
                         <ActionButton
                           icon={LinkIcon}
-                          label="預訂連結"
+                          label="預訂"
                           onClick={() => window.open(activity.bookingLink, '_blank')}
                           variant="booking"
                         />
@@ -452,7 +452,7 @@ const DailyActivity = ({ day }) => {
 
                       <ActionButton
                         icon={AttachMoneyIcon}
-                        label="新增支出"
+                        label="支出"
                         onClick={() => handleOpenExpenseForm(activity)}
                         variant="expense"
                       />
