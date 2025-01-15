@@ -24,9 +24,19 @@ import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import { db } from '../firebase';
 import { ref, onValue, remove, update } from 'firebase/database';
 import ExpenseForm from './ExpenseForm';
+
+const members = [
+  { id: 1, name: '杜爸' },
+  { id: 2, name: '杜麗' },
+  { id: 3, name: 'superdudu' },
+  { id: 4, name: 'winny' },
+  { id: 5, name: 'mandy' }
+];
 
 const categoryIcons = {
   food: RestaurantIcon,
@@ -56,9 +66,9 @@ const ExpenseStats = () => {
   const [categoryTotals, setCategoryTotals] = useState({});
   const [payerTotals, setPayerTotals] = useState({});
   const [showOriginalAmount, setShowOriginalAmount] = useState(false);
-  const [editExpense, setEditExpense] = useState(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
+  const [showEditForm, setShowEditForm] = useState(false);
 
   useEffect(() => {
     const expensesRef = ref(db, 'expenses');
@@ -102,28 +112,29 @@ const ExpenseStats = () => {
   }, []);
 
   const handleEditExpense = (expense) => {
-    setEditExpense(expense);
+    setSelectedExpense(expense);
+    setShowEditForm(true);
   };
 
   const handleUpdateExpense = (updatedExpense) => {
-    const expenseRef = ref(db, `expenses/${editExpense.id}`);
+    const expenseRef = ref(db, `expenses/${selectedExpense.id}`);
     update(expenseRef, {
       ...updatedExpense,
       timestamp: Date.now()
     });
-    setEditExpense(null);
+    setShowEditForm(false);
   };
 
   const handleDeleteClick = (expense) => {
     setSelectedExpense(expense);
-    setDeleteConfirmOpen(true);
+    setShowDeleteDialog(true);
   };
 
   const handleConfirmDelete = () => {
     if (selectedExpense) {
       const expenseRef = ref(db, `expenses/${selectedExpense.id}`);
       remove(expenseRef);
-      setDeleteConfirmOpen(false);
+      setShowDeleteDialog(false);
       setSelectedExpense(null);
     }
   };
@@ -142,8 +153,60 @@ const ExpenseStats = () => {
     setShowOriginalAmount(!showOriginalAmount);
   };
 
+  const calculatePaymentInstructions = () => {
+    // 計算每個人的淨額（付出 - 應付）
+    const netAmounts = {};
+    members.forEach(member => {
+      const paid = payerTotals[member.name] || 0;
+      const shouldPay = expenses
+        .filter(e => e.splitWith.includes(member.name))
+        .reduce((sum, e) => sum + e.amountPerPerson, 0);
+      netAmounts[member.name] = paid - shouldPay;
+    });
+
+    // 找出債務人和債權人
+    const debtors = Object.entries(netAmounts)
+      .filter(([_, amount]) => amount < 0)
+      .sort((a, b) => a[1] - b[1]);
+    const creditors = Object.entries(netAmounts)
+      .filter(([_, amount]) => amount > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    // 計算付款指示
+    const instructions = [];
+    let debtorIndex = 0;
+    let creditorIndex = 0;
+
+    while (debtorIndex < debtors.length && creditorIndex < creditors.length) {
+      const [debtorName, debtorAmount] = debtors[debtorIndex];
+      const [creditorName, creditorAmount] = creditors[creditorIndex];
+      
+      const amount = Math.min(Math.abs(debtorAmount), creditorAmount);
+      if (amount >= 1) { // 只顯示金額大於等於1元的交易
+        instructions.push({
+          from: debtorName,
+          to: creditorName,
+          amount
+        });
+      }
+
+      if (Math.abs(debtorAmount) === creditorAmount) {
+        debtorIndex++;
+        creditorIndex++;
+      } else if (Math.abs(debtorAmount) < creditorAmount) {
+        creditors[creditorIndex][1] -= Math.abs(debtorAmount);
+        debtorIndex++;
+      } else {
+        debtors[debtorIndex][1] += creditorAmount;
+        creditorIndex++;
+      }
+    }
+
+    return instructions;
+  };
+
   return (
-    <Stack spacing={{ xs: 2, sm: 3 }}>
+    <Box sx={{ maxWidth: '100%', pb: { xs: 7, sm: 0 } }}>
       {/* 總金額卡片 */}
       <Paper 
         sx={{ 
@@ -233,16 +296,41 @@ const ExpenseStats = () => {
               >
                 {payer}
               </Typography>
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
-                  color: '#1976D2',
-                  fontWeight: 600,
-                  fontSize: { xs: '0.9rem', sm: '1rem' }
-                }}
-              >
-                {formatAmount(amount)}
-              </Typography>
+              <Stack spacing={0.5} alignItems="flex-end">
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    color: '#1976D2',
+                    fontWeight: 600,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  {formatAmount(amount)}
+                </Typography>
+                {/* 計算應付金額 */}
+                {(() => {
+                  const totalSplitAmount = expenses
+                    .filter(e => e.splitWith.includes(payer))
+                    .reduce((sum, e) => sum + e.amountPerPerson, 0);
+                  const balance = totalSplitAmount - amount;
+                  
+                  if (balance !== 0) {
+                    return (
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: balance > 0 ? '#d32f2f' : '#2e7d32',
+                          fontWeight: 500
+                        }}
+                      >
+                        {balance > 0 
+                          ? `應付 ${formatAmount(balance)}` 
+                          : `應收 ${formatAmount(Math.abs(balance))}`}
+                      </Typography>
+                    );
+                  }
+                })()}
+              </Stack>
             </Box>
           ))}
         </Stack>
@@ -456,6 +544,17 @@ const ExpenseStats = () => {
                           >
                             {expense.payer}
                           </Typography>
+                          {expense.splitWith?.length > 0 && (
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                color: '#5D6D7E',
+                                fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                              }}
+                            >
+                              {`分攤: ${expense.splitWith.join(', ')}`}
+                            </Typography>
+                          )}
                           <Typography 
                             variant="caption" 
                             sx={{ 
@@ -493,20 +592,20 @@ const ExpenseStats = () => {
       </Paper>
 
       {/* Edit Expense Dialog */}
-      {editExpense && (
+      {showEditForm && (
         <ExpenseForm
-          open={!!editExpense}
-          onClose={() => setEditExpense(null)}
+          open={showEditForm}
+          onClose={() => setShowEditForm(false)}
           onSubmit={handleUpdateExpense}
-          day={{ day: editExpense.dayNumber, date: editExpense.date }}
-          initialExpense={editExpense}
+          day={{ day: selectedExpense.dayNumber, date: selectedExpense.date }}
+          initialExpense={selectedExpense}
         />
       )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog
-        open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
         maxWidth="xs"
         fullWidth
       >
@@ -518,7 +617,7 @@ const ExpenseStats = () => {
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => setDeleteConfirmOpen(false)}
+            onClick={() => setShowDeleteDialog(false)}
             sx={{ color: '#6B90BF' }}
           >
             取消
@@ -531,7 +630,98 @@ const ExpenseStats = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Stack>
+
+      {/* 付款指示 */}
+      <Paper 
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          mt: 3,
+          bgcolor: '#FFFFFF',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'rgba(107, 144, 191, 0.12)'
+        }}
+      >
+        <Typography 
+          variant="h6" 
+          gutterBottom 
+          sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            color: '#2C3E50',
+            fontWeight: 600,
+            fontSize: { xs: '1.1rem', sm: '1.25rem' }
+          }}
+        >
+          <SwapHorizIcon sx={{ mr: 1, color: '#6B90BF' }} />
+          付款指示
+        </Typography>
+
+        <Stack spacing={2}>
+          {calculatePaymentInstructions().map((instruction, index) => (
+            <Box 
+              key={index}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                p: { xs: 1.25, sm: 1.5 },
+                bgcolor: 'rgba(107, 144, 191, 0.04)',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'rgba(107, 144, 191, 0.08)'
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    color: '#2C3E50',
+                    fontWeight: 500,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  {instruction.from}
+                </Typography>
+                <ArrowRightAltIcon sx={{ color: '#6B90BF' }} />
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    color: '#2C3E50',
+                    fontWeight: 500,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  {instruction.to}
+                </Typography>
+              </Stack>
+              <Typography 
+                variant="subtitle1" 
+                sx={{ 
+                  color: '#1976D2',
+                  fontWeight: 600,
+                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                }}
+              >
+                {formatAmount(instruction.amount)}
+              </Typography>
+            </Box>
+          ))}
+          {calculatePaymentInstructions().length === 0 && (
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: '#5D6D7E',
+                textAlign: 'center',
+                py: 2
+              }}
+            >
+              目前沒有需要結算的金額
+            </Typography>
+          )}
+        </Stack>
+      </Paper>
+    </Box>
   );
 };
 

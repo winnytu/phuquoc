@@ -13,7 +13,11 @@ import {
   Box,
   IconButton,
   Typography,
-  InputAdornment
+  InputAdornment,
+  Checkbox,
+  ListItemText,
+  Chip,
+  Stack
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -28,7 +32,7 @@ const categories = [
 
 const currencies = [
   { value: 'TWD', label: 'TWD', rate: 1 },
-  { value: 'VND', label: 'VND', rate: 0.0013 } // 1 VND = 0.0013 TWD (約略匯率)
+  { value: 'VND', label: 'VND', rate: 0.0013 }
 ];
 
 const members = [
@@ -61,21 +65,25 @@ const ExpenseForm = ({ open, onClose, onSubmit, day, activity, initialExpense = 
     dayNumber: day.day,
     currency: 'TWD',
     payer: '',
-    amountInTWD: 0
+    amountInTWD: 0,
+    splitWith: [],
+    amountPerPerson: 0
   });
 
   useEffect(() => {
     if (initialExpense) {
       setExpense({
         ...initialExpense,
-        amount: initialExpense.amount.toString()
+        amount: initialExpense.amount.toString(),
+        splitWith: initialExpense.splitWith || []
       });
     } else if (activity) {
       const suggestedCategory = activityTypeToCategory[activity.type] || 'other';
       setExpense(prev => ({
         ...prev,
         category: suggestedCategory,
-        description: activity.name
+        description: activity.name,
+        splitWith: members.map(m => m.name) // 預設全選
       }));
     }
   }, [activity, initialExpense]);
@@ -83,32 +91,52 @@ const ExpenseForm = ({ open, onClose, onSubmit, day, activity, initialExpense = 
   const handleAmountChange = (e) => {
     const amount = e.target.value;
     const rate = currencies.find(c => c.value === expense.currency).rate;
+    const amountInTWD = amount * rate;
+    const amountPerPerson = expense.splitWith.length > 0 ? amountInTWD / expense.splitWith.length : amountInTWD;
+    
     setExpense(prev => ({
       ...prev,
       amount,
-      amountInTWD: amount * rate
+      amountInTWD,
+      amountPerPerson
     }));
   };
 
   const handleCurrencyChange = (e) => {
     const currency = e.target.value;
     const rate = currencies.find(c => c.value === currency).rate;
+    const amountInTWD = expense.amount * rate;
+    const amountPerPerson = expense.splitWith.length > 0 ? amountInTWD / expense.splitWith.length : amountInTWD;
+
     setExpense(prev => ({
       ...prev,
       currency,
-      amountInTWD: prev.amount * rate
+      amountInTWD,
+      amountPerPerson
+    }));
+  };
+
+  const handleSplitWithChange = (event) => {
+    const selectedMembers = event.target.value;
+    const amountPerPerson = selectedMembers.length > 0 ? expense.amountInTWD / selectedMembers.length : expense.amountInTWD;
+    
+    setExpense(prev => ({
+      ...prev,
+      splitWith: selectedMembers,
+      amountPerPerson
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!expense.amount || !expense.category || !expense.payer) return;
+    if (!expense.amount || !expense.category || !expense.payer || expense.splitWith.length === 0) return;
     
     onSubmit({
       ...expense,
       id: initialExpense?.id || Date.now(),
       amount: Number(expense.amount),
-      amountInTWD: Number(expense.amountInTWD)
+      amountInTWD: Number(expense.amountInTWD),
+      amountPerPerson: Number(expense.amountPerPerson)
     });
     setExpense({
       amount: '',
@@ -118,9 +146,20 @@ const ExpenseForm = ({ open, onClose, onSubmit, day, activity, initialExpense = 
       dayNumber: day.day,
       currency: 'TWD',
       payer: '',
-      amountInTWD: 0
+      amountInTWD: 0,
+      splitWith: [],
+      amountPerPerson: 0
     });
     onClose();
+  };
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat('zh-TW', {
+      style: 'currency',
+      currency: 'TWD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   return (
@@ -203,6 +242,39 @@ const ExpenseForm = ({ open, onClose, onSubmit, day, activity, initialExpense = 
               </Select>
             </FormControl>
             <FormControl required>
+              <InputLabel>分攤成員</InputLabel>
+              <Select
+                multiple
+                value={expense.splitWith}
+                label="分攤成員"
+                onChange={handleSplitWithChange}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                {members.map((member) => (
+                  <MenuItem key={member.id} value={member.name}>
+                    <Checkbox checked={expense.splitWith.indexOf(member.name) > -1} />
+                    <ListItemText primary={member.name} />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {expense.splitWith.length > 0 && expense.amount && (
+              <Stack spacing={1} sx={{ bgcolor: 'rgba(107, 144, 191, 0.08)', p: 1.5, borderRadius: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: '#2C3E50' }}>
+                  分攤金額
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#5D6D7E' }}>
+                  每人 {formatAmount(expense.amountPerPerson)}
+                </Typography>
+              </Stack>
+            )}
+            <FormControl required>
               <InputLabel>類別</InputLabel>
               <Select
                 value={expense.category}
@@ -227,7 +299,13 @@ const ExpenseForm = ({ open, onClose, onSubmit, day, activity, initialExpense = 
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={onClose} color="inherit">取消</Button>
-          <Button type="submit" variant="contained">新增</Button>
+          <Button 
+            type="submit" 
+            variant="contained"
+            disabled={!expense.amount || !expense.category || !expense.payer || expense.splitWith.length === 0}
+          >
+            {initialExpense ? '更新' : '新增'}
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

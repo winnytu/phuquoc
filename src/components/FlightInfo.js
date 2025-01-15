@@ -25,7 +25,7 @@ import FlightLandIcon from '@mui/icons-material/FlightLand';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import AirplanemodeActiveIcon from '@mui/icons-material/AirplanemodeActive';
-import { flightInfo, passengers } from '../constants';
+import { flightInfo, passengers } from '../data/tripData';
 
 const FlightInfo = () => {
   const [selectedPassenger, setSelectedPassenger] = useState(0);

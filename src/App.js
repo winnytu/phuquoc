@@ -21,7 +21,6 @@ import LuggageIcon from '@mui/icons-material/Luggage';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import TripSchedule from './components/TripSchedule';
 import FlightInfo from './components/FlightInfo';
-import { flightInfo } from './data/tripData';
 import HotelInfo from './components/HotelInfo';
 import PackingList from './components/PackingList';
 import ExpenseStats from './components/ExpenseStats';
@@ -269,7 +268,7 @@ function App() {
 
           <Box>
             {currentTab === 0 && <TripSchedule />}
-            {currentTab === 1 && <FlightInfo flightInfo={flightInfo} />}
+            {currentTab === 1 && <FlightInfo/>}
             {currentTab === 2 && <HotelInfo />}
             {currentTab === 3 && <PackingList />}
             {currentTab === 4 && <ExpenseStats />}
