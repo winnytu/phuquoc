@@ -12,7 +12,8 @@ import {
   Collapse,
   ButtonBase,
   Chip,
-  Fab
+  Fab,
+  Paper
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -40,6 +41,11 @@ import AddIcon from '@mui/icons-material/Add';
 import ExpenseForm from './ExpenseForm';
 import { db } from '../firebase';
 import { ref, push, onValue } from 'firebase/database';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import NightsStayIcon from '@mui/icons-material/NightsStay';
 
 const MealChip = ({ type, label }) => {
   const getIcon = () => {
@@ -62,7 +68,7 @@ const MealChip = ({ type, label }) => {
       size="small"
       sx={{
         bgcolor: 'rgba(107, 144, 191, 0.08)',
-        color: '#4F698C',
+        color: '#6B90BF',
         '& .MuiChip-icon': {
           color: '#6B90BF'
         }
@@ -163,68 +169,117 @@ const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false, variant =
 const getActivityStyle = (type) => {
   const styles = {
     transport: {
-      borderLeft: '4px solid #FFB74D',
+      borderLeft: '4px solid #B0C4DE',
       icon: FlightTakeoffIcon,
-      iconColor: '#F57C00'
+      iconColor: '#6B90BF'
     },
     taxi: {
-      borderLeft: '4px solid #FFB74D',
+      borderLeft: '4px solid #B0C4DE',
       icon: LocalTaxiIcon,
-      iconColor: '#F57C00'
+      iconColor: '#6B90BF'
     },
     logistics: {
-      borderLeft: '4px solid #CE93D8',
+      borderLeft: '4px solid #B0C4DE',
       icon: LogisticsIcon,
-      iconColor: '#8E24AA'
+      iconColor: '#6B90BF'
     },
     hotel: {
-      borderLeft: '4px solid #90CAF9',
+      borderLeft: '4px solid #B0C4DE',
       icon: HotelIcon,
-      iconColor: '#1976D2'
+      iconColor: '#6B90BF'
     },
     breakfast: {
-      borderLeft: '4px solid #A5D6A7',
+      borderLeft: '4px solid #B0C4DE',
       icon: FreeBreakfastIcon,
-      iconColor: '#388E3C'
+      iconColor: '#6B90BF'
     },
     lunch: {
-      borderLeft: '4px solid #A5D6A7',
+      borderLeft: '4px solid #B0C4DE',
       icon: LunchDiningIcon,
-      iconColor: '#388E3C'
+      iconColor: '#6B90BF'
     },
     dinner: {
-      borderLeft: '4px solid #A5D6A7',
+      borderLeft: '4px solid #B0C4DE',
       icon: DinnerDiningIcon,
-      iconColor: '#388E3C'
+      iconColor: '#6B90BF'
     },
     attraction: {
-      borderLeft: '4px solid #F8BBD0',
+      borderLeft: '4px solid #B0C4DE',
       icon: BeachAccessIcon,
-      iconColor: '#D81B60'
+      iconColor: '#6B90BF'
     },
     nightlife: {
-      borderLeft: '4px solid #F8BBD0',
+      borderLeft: '4px solid #B0C4DE',
       icon: NightlifeIcon,
-      iconColor: '#D81B60'
+      iconColor: '#6B90BF'
     },
     spa: {
-      borderLeft: '4px solid #F8BBD0',
+      borderLeft: '4px solid #B0C4DE',
       icon: SpaIcon,
-      iconColor: '#D81B60'
+      iconColor: '#6B90BF'
     },
     shopping: {
-      borderLeft: '4px solid #F8BBD0',
+      borderLeft: '4px solid #B0C4DE',
       icon: ShoppingBagIcon,
-      iconColor: '#D81B60'
+      iconColor: '#6B90BF'
     },
     default: {
-      borderLeft: '4px solid #90A4AE',
+      borderLeft: '4px solid #B0C4DE',
       icon: InfoIcon,
-      iconColor: '#546E7A'
+      iconColor: '#6B90BF'
     }
   };
 
   return styles[type] || styles.default;
+};
+
+const StatusChip = ({ type, status }) => {
+  const getStatusInfo = () => {
+    if (type === 'attraction') {
+      return {
+        label: status ? '已購票' : '未購票',
+        color: status ? '#6B90BF' : '#B0C4DE'
+      };
+    }
+    if (type === 'transport') {
+      return {
+        label: status ? '已訂票' : '未訂票',
+        color: status ? '#6B90BF' : '#B0C4DE'
+      };
+    }
+    if (['breakfast', 'lunch', 'dinner'].includes(type)) {
+      return {
+        label: status ? '已訂位' : '未訂位',
+        color: status ? '#6B90BF' : '#B0C4DE'
+      };
+    }
+    return null;
+  };
+
+  const statusInfo = getStatusInfo();
+  if (!statusInfo) return null;
+
+  return (
+    <Chip
+      size="small"
+      icon={status ? <CheckCircleIcon /> : <PendingIcon />}
+      label={statusInfo.label}
+      sx={{
+        height: 24,
+        bgcolor: 'rgba(107, 144, 191, 0.08)',
+        color: statusInfo.color,
+        '& .MuiChip-icon': {
+          fontSize: '1rem',
+          color: statusInfo.color
+        },
+        '& .MuiChip-label': {
+          px: 1,
+          fontSize: '0.75rem',
+          fontWeight: 500
+        }
+      }}
+    />
+  );
 };
 
 const DailyActivity = ({ day }) => {
@@ -234,6 +289,51 @@ const DailyActivity = ({ day }) => {
   const [expenseFormOpen, setExpenseFormOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [expenses, setExpenses] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [hotels, setHotels] = useState({});
+  const [attractions, setAttractions] = useState({});
+
+  useEffect(() => {
+    // 讀取行程資料
+    const scheduleRef = ref(db, 'schedule');
+    const unsubscribeSchedule = onValue(scheduleRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const daySchedule = data.find(d => d.day === day.day);
+        if (daySchedule) {
+          setActivities(daySchedule.activities || []);
+        } else {
+          setActivities([]);
+        }
+      } else {
+        setActivities([]);
+      }
+    });
+
+    // 讀取飯店資料
+    const hotelsRef = ref(db, 'hotels');
+    const unsubscribeHotels = onValue(hotelsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setHotels(data);
+      }
+    });
+
+    // 讀取景點資料
+    const attractionsRef = ref(db, 'attractions');
+    const unsubscribeAttractions = onValue(attractionsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setAttractions(data);
+      }
+    });
+
+    return () => {
+      unsubscribeSchedule();
+      unsubscribeHotels();
+      unsubscribeAttractions();
+    };
+  }, [day.day]);
 
   // 從 Firebase 讀取支出資料
   useEffect(() => {
@@ -316,8 +416,23 @@ const DailyActivity = ({ day }) => {
   };
 
   return (
-    <>
-      {/* 行程列表 */}
+    <Box>
+      {/* Day Title */}
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          fontWeight: 600,
+          color: '#2C3E50',
+          mb: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}
+      >
+         DAY {day.day}
+      </Typography>
+
+      {/* Activities List */}
       <List sx={{ 
         position: 'relative',
         '& .MuiListItem-root': { 
@@ -333,8 +448,8 @@ const DailyActivity = ({ day }) => {
           }
         }
       }}>
-        {day.activities.map((activity, index) => {
-          const nextActivity = day.activities[index + 1];
+        {activities.map((activity, index) => {
+          const nextActivity = activities[index + 1];
           const attractionKey = getAttractionKey(activity.name);
           const attraction = attractions?.[attractionKey];
           const activityType = getActivityType(activity);
@@ -378,6 +493,16 @@ const DailyActivity = ({ day }) => {
                       >
                         <ActivityIcon sx={{ color: activityStyle.iconColor, fontSize: '1.2rem' }} />
                         {activity.name}
+                        {(activity.type === 'attraction' || 
+                          activity.type === 'breakfast' || 
+                          activity.type === 'lunch' || 
+                          activity.type === 'dinner' ||
+                          activity.type === 'transport') && (
+                          <StatusChip 
+                            type={activity.type}
+                            status={activity.ticketStatus}
+                          />
+                        )}
                       </Typography>
                       <Typography 
                         variant="body2" 
@@ -436,7 +561,7 @@ const DailyActivity = ({ day }) => {
                         <ActionButton
                           icon={MapIcon}
                           label="地圖"
-                          onClick={() => window.open(createGoogleMapsLink(activity.location), '_blank')}
+                          onClick={() => window.open(activity.location.url || createGoogleMapsLink(activity.location), '_blank')}
                           variant="map"
                         />
                       )}
@@ -486,7 +611,7 @@ const DailyActivity = ({ day }) => {
                   )}
                 </Box>
               </ListItem>
-              {index < day.activities.length - 1 && (
+              {index < activities.length - 1 && (
                 <Divider sx={{ my: 1, borderColor: 'rgba(107, 144, 191, 0.12)' }} />
               )}
             </React.Fragment>
@@ -525,6 +650,106 @@ const DailyActivity = ({ day }) => {
         </Box>
       )}
 
+      {/* Hotel Information */}
+      {day.hotel && (
+        <Paper 
+          sx={{ 
+            p: { xs: 2, sm: 3 },
+            mt: 3,
+            borderRadius: 1,
+            bgcolor: '#FFFFFF',
+            border: '1px solid',
+            borderColor: 'rgba(107, 144, 191, 0.12)'
+          }}
+        >
+          <Box sx={{ 
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 0.5,
+            mb: 2
+          }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                color: '#2C3E50',
+                fontWeight: 600,
+                fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                lineHeight: 1.3
+              }}
+            >
+              <HotelIcon sx={{ color: '#6B90BF', fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
+              住宿資訊
+            </Typography>
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                color: '#2C3E50',
+                fontWeight: 500,
+                pl: { xs: 0.5, sm: 0.5 }
+              }}
+            >
+              {day.hotel.name}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                color: '#5D6D7E',
+                pl: { xs: 0.5, sm: 0.5 }
+              }}
+            >
+              <CalendarTodayIcon sx={{ fontSize: '1rem' }} />
+              {day.hotel.checkIn} - {day.hotel.checkOut}
+            </Typography>
+          </Box>
+
+          <Divider sx={{ 
+            my: 2,
+            borderColor: 'rgba(107, 144, 191, 0.12)'
+          }} />
+
+          <Stack 
+            spacing={1}
+            sx={{ width: '100%' }}
+          >
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 1,
+              flexWrap: 'wrap'
+            }}>
+              <ActionButton
+                icon={NightsStayIcon}
+                label={`${day.hotel.nights} 晚`}
+              />
+              
+              <ActionButton
+                icon={MapIcon}
+                label="查看地圖"
+                onClick={() => window.open(day.hotel.location.url || createGoogleMapsLink(day.hotel.location), '_blank')}
+              />
+
+              <ActionButton
+                icon={LinkIcon}
+                label="訂房詳情"
+                onClick={() => window.open(day.hotel.bookingLink, '_blank')}
+              />
+            </Box>
+
+            <ActionButton
+              icon={LocationOnIcon}
+              label={day.hotel.location.address}
+              onClick={() => window.open(day.hotel.location.url || createGoogleMapsLink(day.hotel.location), '_blank')}
+              fullWidth={isMobile}
+            />
+          </Stack>
+        </Paper>
+      )}
+
       {/* Expense Form Dialog */}
       <ExpenseForm
         open={expenseFormOpen}
@@ -536,7 +761,7 @@ const DailyActivity = ({ day }) => {
         day={day}
         activity={selectedActivity}
       />
-    </>
+    </Box>
   );
 };
 

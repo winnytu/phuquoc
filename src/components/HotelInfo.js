@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Paper,
   Typography,
@@ -15,7 +15,8 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import MapIcon from '@mui/icons-material/Map';
 import LinkIcon from '@mui/icons-material/Link';
 import NightsStayIcon from '@mui/icons-material/NightsStay';
-import { hotels } from '../data/tripData';
+import { db } from '../firebase';
+import { ref, onValue } from 'firebase/database';
 
 const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false }) => (
   <ButtonBase
@@ -56,8 +57,26 @@ const ActionButton = ({ icon: Icon, label, onClick, fullWidth = false }) => (
 );
 
 const HotelInfo = () => {
+  const [hotels, setHotels] = useState([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  useEffect(() => {
+    const hotelsRef = ref(db, 'hotels');
+    const unsubscribe = onValue(hotelsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // 將物件轉換為陣列並按照入住日期排序
+        const hotelsList = Object.entries(data).map(([id, hotel]) => ({
+          id,
+          ...hotel
+        })).sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
+        setHotels(hotelsList);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const createGoogleMapsLink = (location) => {
     if (!location) return null;
