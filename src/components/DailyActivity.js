@@ -758,7 +758,7 @@ const DailyActivity = ({ day }) => {
           setSelectedActivity(null);
         }}
         onSubmit={handleAddExpense}
-        day={day}
+        day={{ day: day.day, date: day.date }}
         activity={selectedActivity}
       />
     </Box>

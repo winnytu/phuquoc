@@ -93,12 +93,31 @@ const ExpenseStats = () => {
         }, {});
         setCategoryTotals(catTotals);
 
-        // 計算各付款人總額
-        const payTotals = expensesList.reduce((acc, expense) => {
-          const payer = expense.payer || 'unknown';
-          acc[payer] = (acc[payer] || 0) + expense.amountInTWD;
-          return acc;
-        }, {});
+        // 計算各付款人實際消費總額（扣除幫別人分擔的部分）
+        const payTotals = {};
+        members.forEach(member => {
+          const memberName = member.name;
+          
+          // 1. 計算這個人付出的總金額
+          const paidTotal = expensesList
+            .filter(expense => expense.payer === memberName)
+            .reduce((sum, expense) => sum + expense.amountInTWD, 0);
+          
+          // 2. 計算這個人應該分擔的總金額
+          const shouldPayTotal = expensesList
+            .filter(expense => expense.splitWith.includes(memberName))
+            .reduce((sum, expense) => {
+              // 計算每個人實際應分擔的金額
+              const splitAmount = expense.amountInTWD / expense.splitWith.length;
+              return sum + splitAmount;
+            }, 0);
+          
+          // 3. 設定付出金額和應付金額
+          payTotals[memberName] = {
+            paid: paidTotal,
+            shouldPay: shouldPayTotal
+          };
+        });
         setPayerTotals(payTotals);
       } else {
         setExpenses([]);
@@ -157,11 +176,9 @@ const ExpenseStats = () => {
     // 計算每個人的淨額（付出 - 應付）
     const netAmounts = {};
     members.forEach(member => {
-      const paid = payerTotals[member.name] || 0;
-      const shouldPay = expenses
-        .filter(e => e.splitWith.includes(member.name))
-        .reduce((sum, e) => sum + e.amountPerPerson, 0);
-      netAmounts[member.name] = paid - shouldPay;
+      const paidAmount = payerTotals[member.name]?.paid || 0;
+      const shouldPayAmount = payerTotals[member.name]?.shouldPay || 0;
+      netAmounts[member.name] = paidAmount - shouldPayAmount;
     });
 
     // 找出債務人和債權人
@@ -203,6 +220,100 @@ const ExpenseStats = () => {
     }
 
     return instructions;
+  };
+
+  const renderPayerStats = () => {
+    return members.map((member) => {
+      const paidAmount = payerTotals[member.name]?.paid || 0;
+      const shouldPayAmount = payerTotals[member.name]?.shouldPay || 0;
+      const balance = paidAmount - shouldPayAmount;
+
+      return (
+        <Box
+          key={member.name}
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            p: { xs: 1.25, sm: 1.5 },
+            bgcolor: 'rgba(107, 144, 191, 0.04)',
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'rgba(107, 144, 191, 0.08)'
+          }}
+        >
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              color: '#2C3E50',
+              fontWeight: 500,
+              fontSize: { xs: '0.9rem', sm: '1rem' }
+            }}
+          >
+            {member.name}
+          </Typography>
+          <Stack spacing={0.5} alignItems="flex-end">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: '#5D6D7E',
+                  fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                }}
+              >
+                總支出
+              </Typography>
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  color: '#2C3E50',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                }}
+              >
+                {formatAmount(shouldPayAmount)}
+              </Typography>
+            </Box>  
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#5D6D7E',
+                  fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                }}
+              >
+                已付
+              </Typography>
+              <Typography 
+                variant="subtitle1" 
+                sx={{ 
+                  color: '#1976D2',
+                  fontWeight: 600,
+                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                }}
+              >
+                {formatAmount(paidAmount)}
+              </Typography>
+            </Box>
+           
+            {balance !== 0 && (
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: balance > 0 ? '#2e7d32' : '#d32f2f',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                }}
+              >
+                {balance > 0 
+                  ? `待收 ${formatAmount(balance)}` 
+                  : `待付 ${formatAmount(Math.abs(balance))}`}
+              </Typography>
+            )}
+          </Stack>
+        </Box>
+      );
+    });
   };
 
   return (
@@ -269,70 +380,10 @@ const ExpenseStats = () => {
           }}
         >
           <AttachMoneyIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
-          付款人統計
+          支出分析
         </Typography>
         <Stack spacing={1.5}>
-          {Object.entries(payerTotals).map(([payer, amount]) => (
-            <Box 
-              key={payer}
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                p: { xs: 1.25, sm: 1.5 },
-                bgcolor: 'rgba(107, 144, 191, 0.04)',
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'rgba(107, 144, 191, 0.08)'
-              }}
-            >
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
-                  color: '#2C3E50', 
-                  fontWeight: 500,
-                  fontSize: { xs: '0.9rem', sm: '1rem' }
-                }}
-              >
-                {payer}
-              </Typography>
-              <Stack spacing={0.5} alignItems="flex-end">
-                <Typography 
-                  variant="subtitle1" 
-                  sx={{ 
-                    color: '#1976D2',
-                    fontWeight: 600,
-                    fontSize: { xs: '0.9rem', sm: '1rem' }
-                  }}
-                >
-                  {formatAmount(amount)}
-                </Typography>
-                {/* 計算應付金額 */}
-                {(() => {
-                  const totalSplitAmount = expenses
-                    .filter(e => e.splitWith.includes(payer))
-                    .reduce((sum, e) => sum + e.amountPerPerson, 0);
-                  const balance = totalSplitAmount - amount;
-                  
-                  if (balance !== 0) {
-                    return (
-                      <Typography 
-                        variant="caption" 
-                        sx={{ 
-                          color: balance > 0 ? '#d32f2f' : '#2e7d32',
-                          fontWeight: 500
-                        }}
-                      >
-                        {balance > 0 
-                          ? `應付 ${formatAmount(balance)}` 
-                          : `應收 ${formatAmount(Math.abs(balance))}`}
-                      </Typography>
-                    );
-                  }
-                })()}
-              </Stack>
-            </Box>
-          ))}
+          {renderPayerStats()}
         </Stack>
       </Paper>
 
@@ -358,7 +409,7 @@ const ExpenseStats = () => {
           }}
         >
           <AttachMoneyIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
-          類別統計
+          分類統計
         </Typography>
         <Stack spacing={1.5}>
           {Object.entries(categoryTotals).map(([category, amount]) => {
@@ -428,7 +479,7 @@ const ExpenseStats = () => {
           }}
         >
           <AttachMoneyIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
-          每日支出明細
+          每日明細
         </Typography>
         <Stack spacing={2}>
           {Object.entries(expenses.reduce((acc, expense) => {
@@ -612,7 +663,7 @@ const ExpenseStats = () => {
         <DialogTitle sx={{ color: '#2C3E50' }}>確認刪除</DialogTitle>
         <DialogContent>
           <Typography>
-            確定要刪除這筆支出記錄嗎？此操作無法復原。
+            確定要刪除這筆支出嗎？此操作無法復原。
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -654,7 +705,7 @@ const ExpenseStats = () => {
           }}
         >
           <SwapHorizIcon sx={{ mr: 1, color: '#6B90BF' }} />
-          付款指示
+          待結算金額
         </Typography>
 
         <Stack spacing={2}>
@@ -716,7 +767,7 @@ const ExpenseStats = () => {
                 py: 2
               }}
             >
-              目前沒有需要結算的金額
+              目前沒有待結算金額
             </Typography>
           )}
         </Stack>
