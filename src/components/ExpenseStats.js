@@ -73,58 +73,147 @@ const ExpenseStats = () => {
   useEffect(() => {
     const expensesRef = ref(db, 'expenses');
     const unsubscribe = onValue(expensesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const expensesList = Object.entries(data).map(([id, expense]) => ({
-          ...expense,
-          id
-        }));
-        setExpenses(expensesList);
+      const data = snapshot.val() || {};
+      
+      // 加入固定支出
+      const fixedExpenses = {
+        flight1: {
+          amount: 13186,
+          amountInTWD: 13186,
+          category: 'transport',
+          currency: 'TWD',
+          dayNumber: 1,
+          description: '機票',
+          payer: '杜爸',
+          splitWith: ['杜爸'],
+          date: '2024-01-24'
+        },
+        flight2: {
+          amount: 13186,
+          amountInTWD: 13186,
+          category: 'transport',
+          currency: 'TWD',
+          dayNumber: 1,
+          description: '機票',
+          payer: '杜麗',
+          splitWith: ['杜麗'],
+          date: '2024-01-24'
+        },
+        flight3: {
+          amount: 13186,
+          amountInTWD: 13186,
+          category: 'transport',
+          currency: 'TWD',
+          dayNumber: 1,
+          description: '機票',
+          payer: 'superdudu',
+          splitWith: ['superdudu'],
+          date: '2024-01-24'
+        },
+        flight4: {
+          amount: 13186,
+          amountInTWD: 13186,
+          category: 'transport',
+          currency: 'TWD',
+          dayNumber: 1,
+          description: '機票',
+          payer: 'winny',
+          splitWith: ['winny'],
+          date: '2024-01-24'
+        },
+        flight5: {
+          amount: 13186,
+          amountInTWD: 13186,
+          category: 'transport',
+          currency: 'TWD',
+          dayNumber: 1,
+          description: '機票',
+          payer: 'mandy',
+          splitWith: ['mandy'],
+          date: '2024-01-24'
+        },
+        hotel1: {
+          amount: 38723,
+          amountInTWD: 38723,
+          category: 'hotel',
+          currency: 'TWD',
+          dayNumber: 1,
+          description: 'Sailing Club Signature Resort (1/24-1/26)',
+          payer: 'winny',
+          splitWith: ['杜爸', '杜麗', 'superdudu', 'winny', 'mandy'],
+          date: '2024-01-24'
+        },
+        hotel2: {
+          amount: 25912,
+          amountInTWD: 25912,
+          category: 'hotel',
+          currency: 'TWD',
+          dayNumber: 3,
+          description: 'New World Phu Quoc Resort (1/26-1/28)',
+          payer: 'winny',
+          splitWith: ['杜爸', '杜麗', 'superdudu', 'winny', 'mandy'],
+          date: '2024-01-26'
+        },
+        hotel3: {
+          amount: 18420,
+          amountInTWD: 18420,
+          category: 'hotel',
+          currency: 'TWD',
+          dayNumber: 5,
+          description: 'Ocean Bay Phu Quoc Resort (1/28-1/29)',
+          payer: 'winny',
+          splitWith: ['杜爸', '杜麗', 'superdudu', 'winny', 'mandy'],
+          date: '2024-01-28'
+        }
+      };
 
-        // 計算總金額（以TWD為準）
-        const total = expensesList.reduce((sum, expense) => sum + expense.amountInTWD, 0);
-        setTotalAmount(total);
+      // 合併固定支出和資料庫支出
+      const mergedData = { ...fixedExpenses, ...data };
+      
+      const expensesList = Object.entries(mergedData).map(([id, expense]) => ({
+        ...expense,
+        id
+      }));
+      setExpenses(expensesList);
 
-        // 計算各類別總額
-        const catTotals = expensesList.reduce((acc, expense) => {
-          const category = expense.category || 'other';
-          acc[category] = (acc[category] || 0) + expense.amountInTWD;
-          return acc;
-        }, {});
-        setCategoryTotals(catTotals);
+      // 計算總金額（以TWD為準）
+      const total = expensesList.reduce((sum, expense) => sum + expense.amountInTWD, 0);
+      setTotalAmount(total);
 
-        // 計算各付款人實際消費總額（扣除幫別人分擔的部分）
-        const payTotals = {};
-        members.forEach(member => {
-          const memberName = member.name;
-          
-          // 1. 計算這個人付出的總金額
-          const paidTotal = expensesList
-            .filter(expense => expense.payer === memberName)
-            .reduce((sum, expense) => sum + expense.amountInTWD, 0);
-          
-          // 2. 計算這個人應該分擔的總金額
-          const shouldPayTotal = expensesList
-            .filter(expense => expense.splitWith.includes(memberName))
-            .reduce((sum, expense) => {
-              // 計算每個人實際應分擔的金額
-              const splitAmount = expense.amountInTWD / expense.splitWith.length;
-              return sum + splitAmount;
-            }, 0);
-          
-          // 3. 設定付出金額和應付金額
-          payTotals[memberName] = {
-            paid: paidTotal,
-            shouldPay: shouldPayTotal
-          };
-        });
-        setPayerTotals(payTotals);
-      } else {
-        setExpenses([]);
-        setTotalAmount(0);
-        setCategoryTotals({});
-        setPayerTotals({});
-      }
+      // 計算各類別總額
+      const catTotals = expensesList.reduce((acc, expense) => {
+        const category = expense.category || 'other';
+        acc[category] = (acc[category] || 0) + expense.amountInTWD;
+        return acc;
+      }, {});
+      setCategoryTotals(catTotals);
+
+      // 計算各付款人實際消費總額（扣除幫別人分擔的部分）
+      const payTotals = {};
+      members.forEach(member => {
+        const memberName = member.name;
+        
+        // 1. 計算這個人付出的總金額
+        const paidTotal = expensesList
+          .filter(expense => expense.payer === memberName)
+          .reduce((sum, expense) => sum + expense.amountInTWD, 0);
+        
+        // 2. 計算這個人應該分擔的總金額
+        const shouldPayTotal = expensesList
+          .filter(expense => expense.splitWith.includes(memberName))
+          .reduce((sum, expense) => {
+            // 計算每個人實際應分擔的金額
+            const splitAmount = expense.amountInTWD / expense.splitWith.length;
+            return sum + splitAmount;
+          }, 0);
+        
+        // 3. 設定付出金額和應付金額
+        payTotals[memberName] = {
+          paid: paidTotal,
+          shouldPay: shouldPayTotal
+        };
+      });
+      setPayerTotals(payTotals);
     });
 
     return () => unsubscribe();
@@ -358,6 +447,152 @@ const ExpenseStats = () => {
         </Typography>
       </Paper>
 
+      {/* 機票支出 */}
+      <Paper 
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          mt: 3,
+          bgcolor: '#FFFFFF',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'rgba(107, 144, 191, 0.12)'
+        }}
+      >
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            color: '#2C3E50',
+            mb: { xs: 1.5, sm: 2 },
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            fontSize: { xs: '1.125rem', sm: '1.25rem' }
+          }}
+        >
+          <FlightTakeoffIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
+          機票費用
+        </Typography>
+        <Stack spacing={1}>
+          {expenses
+            .filter(expense => expense.id.startsWith('flight'))
+            .map((expense) => (
+              <Box 
+                key={expense.id}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  p: { xs: 1.25, sm: 1.5 },
+                  bgcolor: 'rgba(107, 144, 191, 0.04)',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'rgba(107, 144, 191, 0.08)'
+                }}
+              >
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    color: '#2C3E50',
+                    fontWeight: 500,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  {expense.payer}
+                </Typography>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    color: '#1976D2',
+                    fontWeight: 600,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  {formatAmount(expense.amountInTWD)}
+                </Typography>
+              </Box>
+          ))}
+        </Stack>
+      </Paper>
+
+      {/* 飯店支出 */}
+      <Paper 
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          mt: 3,
+          bgcolor: '#FFFFFF',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'rgba(107, 144, 191, 0.12)'
+        }}
+      >
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            color: '#2C3E50',
+            mb: { xs: 1.5, sm: 2 },
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            fontSize: { xs: '1.125rem', sm: '1.25rem' }
+          }}
+        >
+          <HotelIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
+          住宿費用
+        </Typography>
+        <Stack spacing={1}>
+          {expenses
+            .filter(expense => expense.id.startsWith('hotel'))
+            .map((expense) => (
+              <Box 
+                key={expense.id}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  p: { xs: 1.25, sm: 1.5 },
+                  bgcolor: 'rgba(107, 144, 191, 0.04)',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'rgba(107, 144, 191, 0.08)'
+                }}
+              >
+                <Box>
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      color: '#2C3E50',
+                      fontWeight: 500,
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                      mb: 0.5
+                    }}
+                  >
+                    {expense.description}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: '#5D6D7E',
+                      fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                    }}
+                  >
+                    {`付款人: ${expense.payer}`}
+                  </Typography>
+                </Box>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    color: '#1976D2',
+                    fontWeight: 600,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  {formatAmount(expense.amountInTWD)}
+                </Typography>
+              </Box>
+          ))}
+        </Stack>
+      </Paper>
+
       {/* 付款人統計 */}
       <Paper 
         sx={{ 
@@ -461,6 +696,7 @@ const ExpenseStats = () => {
       <Paper 
         sx={{ 
           p: { xs: 2, sm: 3 },
+          mt: 3,
           bgcolor: '#FFFFFF',
           borderRadius: 1,
           border: '1px solid',
@@ -482,120 +718,116 @@ const ExpenseStats = () => {
           每日明細
         </Typography>
         <Stack spacing={2}>
-          {Object.entries(expenses.reduce((acc, expense) => {
-            const day = expense.dayNumber;
-            if (!acc[day]) {
-              acc[day] = [];
-            }
-            acc[day].push(expense);
-            return acc;
-          }, {})).sort(([a], [b]) => a - b).map(([day, dayExpenses]) => (
-            <Box key={day}>
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
-                  color: '#2C3E50',
-                  fontWeight: 600,
-                  mb: 1.5,
-                  pb: 0.5,
-                  borderBottom: '1px solid',
-                  borderColor: 'rgba(107, 144, 191, 0.12)',
-                  fontSize: { xs: '1rem', sm: '1.1rem' }
-                }}
-              >
-                DAY {day}
-              </Typography>
-              <Stack spacing={1}>
-                {dayExpenses.map((expense) => {
-                  const Icon = categoryIcons[expense.category] || categoryIcons.other;
-                  return (
-                    <Box 
-                      key={expense.id}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        p: { xs: 1.25, sm: 1.5 },
-                        bgcolor: 'rgba(107, 144, 191, 0.04)',
-                        borderRadius: 1,
-                        border: '1px solid',
-                        borderColor: 'rgba(107, 144, 191, 0.08)'
-                      }}
-                    >
-                      <Box sx={{ flex: 1 }}>
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: 1, 
-                          mb: 0.5,
-                          flexWrap: 'wrap'
-                        }}>
-                          <Icon sx={{ 
-                            color: '#6B90BF', 
-                            fontSize: { xs: '1.1rem', sm: '1.2rem' },
-                            flexShrink: 0
-                          }} />
-                          <Typography 
-                            variant="subtitle2" 
-                            sx={{ 
-                              color: '#2C3E50',
-                              fontWeight: 500,
-                              flex: 1,
-                              fontSize: { xs: '0.875rem', sm: '0.9rem' },
-                              minWidth: { xs: '100px', sm: 'auto' }
-                            }}
-                          >
-                            {expense.description || categoryLabels[expense.category] || '未分類支出'}
-                          </Typography>
+          {Object.entries(
+            expenses
+              .filter(expense => !expense.id.startsWith('flight') && !expense.id.startsWith('hotel'))
+              .reduce((acc, expense) => {
+                const day = expense.dayNumber;
+                if (!acc[day]) {
+                  acc[day] = [];
+                }
+                acc[day].push(expense);
+                return acc;
+              }, {})
+          )
+            .sort(([a], [b]) => a - b)
+            .map(([day, dayExpenses]) => (
+              <Box key={day}>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    color: '#2C3E50',
+                    fontWeight: 600,
+                    mb: 1.5,
+                    pb: 0.5,
+                    borderBottom: '1px solid',
+                    borderColor: 'rgba(107, 144, 191, 0.12)',
+                    fontSize: { xs: '1rem', sm: '1.1rem' }
+                  }}
+                >
+                  DAY {day}
+                </Typography>
+                <Stack spacing={1}>
+                  {dayExpenses.map((expense) => {
+                    const Icon = categoryIcons[expense.category] || categoryIcons.other;
+                    return (
+                      <Box 
+                        key={expense.id}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          p: { xs: 1.25, sm: 1.5 },
+                          bgcolor: 'rgba(107, 144, 191, 0.04)',
+                          borderRadius: 1,
+                          border: '1px solid',
+                          borderColor: 'rgba(107, 144, 191, 0.08)'
+                        }}
+                      >
+                        <Box sx={{ flex: 1 }}>
                           <Box sx={{ 
                             display: 'flex', 
-                            gap: 0.5,
-                            ml: 'auto',
-                            flexShrink: 0
-                          }}>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEditExpense(expense)}
-                              sx={{ 
-                                color: '#6B90BF',
-                                padding: { xs: '4px', sm: '8px' },
-                                '&:hover': { color: '#1976D2' }
-                              }}
-                            >
-                              <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteClick(expense)}
-                              sx={{ 
-                                color: '#6B90BF',
-                                padding: { xs: '4px', sm: '8px' },
-                                '&:hover': { color: '#d32f2f' }
-                              }}
-                            >
-                              <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                        <Box 
-                          sx={{ 
-                            display: 'flex', 
                             alignItems: 'center', 
-                            gap: 1,
-                            ml: '1.7rem',
+                            gap: 1, 
+                            mb: 0.5,
                             flexWrap: 'wrap'
-                          }}
-                        >
-                          <Typography 
-                            variant="caption" 
+                          }}>
+                            <Icon sx={{ 
+                              color: '#6B90BF', 
+                              fontSize: { xs: '1.1rem', sm: '1.2rem' },
+                              flexShrink: 0
+                            }} />
+                            <Typography 
+                              variant="subtitle2" 
+                              sx={{ 
+                                color: '#2C3E50',
+                                fontWeight: 500,
+                                flex: 1,
+                                fontSize: { xs: '0.875rem', sm: '0.9rem' },
+                                minWidth: { xs: '100px', sm: 'auto' }
+                              }}
+                            >
+                              {expense.description || categoryLabels[expense.category] || '未分類支出'}
+                            </Typography>
+                            <Box sx={{ 
+                              display: 'flex', 
+                              gap: 0.5,
+                              ml: 'auto',
+                              flexShrink: 0
+                            }}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleEditExpense(expense)}
+                                sx={{ 
+                                  color: '#6B90BF',
+                                  padding: { xs: '4px', sm: '8px' },
+                                  '&:hover': { color: '#1976D2' }
+                                }}
+                              >
+                                <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteClick(expense)}
+                                sx={{ 
+                                  color: '#6B90BF',
+                                  padding: { xs: '4px', sm: '8px' },
+                                  '&:hover': { color: '#d32f2f' }
+                                }}
+                              >
+                                <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                          <Box 
                             sx={{ 
-                              color: '#5D6D7E',
-                              fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: 1,
+                              ml: '1.7rem',
+                              flexWrap: 'wrap'
                             }}
                           >
-                            {expense.payer}
-                          </Typography>
-                          {expense.splitWith?.length > 0 && (
                             <Typography 
                               variant="caption" 
                               sx={{ 
@@ -603,41 +835,51 @@ const ExpenseStats = () => {
                                 fontSize: { xs: '0.75rem', sm: '0.8rem' }
                               }}
                             >
-                              {`分攤: ${expense.splitWith.join(', ')}`}
+                              {expense.payer}
                             </Typography>
-                          )}
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              color: '#5D6D7E',
-                              fontSize: { xs: '0.75rem', sm: '0.8rem' }
-                            }}
-                          >
-                            {expense.activityName}
-                          </Typography>
+                            {expense.splitWith?.length > 0 && (
+                              <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                  color: '#5D6D7E',
+                                  fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                                }}
+                              >
+                                {`分攤: ${expense.splitWith.join(', ')}`}
+                              </Typography>
+                            )}
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                color: '#5D6D7E',
+                                fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                              }}
+                            >
+                              {expense.activityName}
+                            </Typography>
+                          </Box>
                         </Box>
+                        <Typography 
+                          variant="subtitle2" 
+                          onClick={toggleAmountDisplay}
+                          sx={{ 
+                            color: '#1976D2',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            ml: 2,
+                            whiteSpace: 'nowrap',
+                            fontSize: { xs: '0.875rem', sm: '0.9rem' }
+                          }}
+                        >
+                          {showOriginalAmount 
+                            ? `${formatAmount(expense.amount, expense.currency)}`
+                            : formatAmount(expense.amountInTWD)}
+                        </Typography>
                       </Box>
-                      <Typography 
-                        variant="subtitle2" 
-                        onClick={toggleAmountDisplay}
-                        sx={{ 
-                          color: '#1976D2',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          ml: 2,
-                          whiteSpace: 'nowrap',
-                          fontSize: { xs: '0.875rem', sm: '0.9rem' }
-                        }}
-                      >
-                        {showOriginalAmount 
-                          ? `${formatAmount(expense.amount, expense.currency)}`
-                          : formatAmount(expense.amountInTWD)}
-                      </Typography>
-                    </Box>
-                  );
-                })}
-              </Stack>
-            </Box>
+                    );
+                  })}
+                </Stack>
+              </Box>
           ))}
         </Stack>
       </Paper>
@@ -682,7 +924,7 @@ const ExpenseStats = () => {
         </DialogActions>
       </Dialog>
 
-      {/* 付款指示 */}
+      {/* 待結算金額 */}
       <Paper 
         sx={{ 
           p: { xs: 2, sm: 3 },
@@ -694,14 +936,14 @@ const ExpenseStats = () => {
         }}
       >
         <Typography 
-          variant="h6" 
-          gutterBottom 
+          variant="h6"
           sx={{ 
             display: 'flex',
             alignItems: 'center',
             color: '#2C3E50',
             fontWeight: 600,
-            fontSize: { xs: '1.1rem', sm: '1.25rem' }
+            fontSize: { xs: '1.1rem', sm: '1.25rem' },
+            mb: 2
           }}
         >
           <SwapHorizIcon sx={{ mr: 1, color: '#6B90BF' }} />

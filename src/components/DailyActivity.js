@@ -13,7 +13,8 @@ import {
   ButtonBase,
   Chip,
   Fab,
-  Paper
+  Paper,
+  Link
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -46,6 +47,7 @@ import PendingIcon from '@mui/icons-material/Pending';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import NightsStayIcon from '@mui/icons-material/NightsStay';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 const MealChip = ({ type, label }) => {
   const getIcon = () => {
@@ -503,6 +505,25 @@ const DailyActivity = ({ day }) => {
                             status={activity.ticketStatus}
                           />
                         )}
+                        {activity.pdfUrl && (
+                          <Link
+                            href={activity.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              color: '#6B90BF',
+                              textDecoration: 'none',
+                              '&:hover': {
+                                textDecoration: 'none',
+                                color: '#1976D2'
+                              }
+                            }}
+                          >
+                            <PictureAsPdfIcon sx={{ fontSize: '1.2rem' }} />
+                          </Link>
+                        )}
                       </Typography>
                       <Typography 
                         variant="body2" 
@@ -518,25 +539,6 @@ const DailyActivity = ({ day }) => {
                         {activity.time}
                       </Typography>
                     </Box>
-                    {attraction && (
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleExpandActivity(activity.name)}
-                        sx={{ 
-                          color: '#4F698C',
-                          bgcolor: 'rgba(107, 144, 191, 0.04)',
-                          '&:hover': {
-                            bgcolor: 'rgba(107, 144, 191, 0.16)'
-                          },
-                          mt: 0.5
-                        }}
-                      >
-                        {expandedActivity === activity.name ? 
-                          <ExpandLessIcon /> : 
-                          <ExpandMoreIcon />
-                        }
-                      </IconButton>
-                    )}
                   </Box>
 
                   {/* Activity Info and Actions */}
@@ -599,15 +601,6 @@ const DailyActivity = ({ day }) => {
                       <InfoIcon sx={{ fontSize: '1rem', mt: 0.2 }} />
                       {activity.description}
                     </Typography>
-                  )}
-
-                  {/* Attraction Details */}
-                  {attraction && (
-                    <Collapse in={expandedActivity === activity.name}>
-                      <Box sx={{ mt: 1 }}>
-                        <AttractionDetails attraction={attraction} />
-                      </Box>
-                    </Collapse>
                   )}
                 </Box>
               </ListItem>
